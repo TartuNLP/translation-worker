@@ -6,10 +6,13 @@ import json
 
 def _politeness(c, expected, response = False):
 	msg = c.recv(128)
-	assert(msg == expected)
+	#assert(msg == expected)
 	print(str(msg) + " received")
-	if response:
-		c.send(response)
+	if msg == expected:
+		if response:
+			c.send(response)
+	else:
+		c.send(b"Fail")
 
 def startServer(msgProcFunc, msgProcArgs, host = '172.17.66.215', port = 12349, log = False):
 	s = socket.socket()
