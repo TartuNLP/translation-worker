@@ -1,7 +1,7 @@
 # TartuNLP translate
 Mitmekeelne mitme-valdkonnaline neuromasintõlge. Käesolev versioon toetab sisend- ja väljundkeelena seitset keelt: eesti, läti, leedu, inglise, vene, saksa ja soome.
 
-Arengu staatust kajastab [GitHubi leht](https://github.com/tartunlp/kama).
+Arengu staatust kajastab projekti [GitHubi leht](https://github.com/tartunlp/kama).
 
 ## Kasutamine
 
