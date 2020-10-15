@@ -14,7 +14,7 @@ Kõige paremini töötavad masintõlkes valdkonna-spetsiifilised erilahendused. 
 ## Tarkvara vajadused
 
 ```
-pip3 install mxnet sentencepiece sockeye
+pip3 install mxnet sentencepiece sockeye==1.18.106
 ```
 
 ## Kasutamine käsurea skriptina:
