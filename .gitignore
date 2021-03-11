@@ -1,0 +1,4 @@
+config/.env
+.idea/
+__pycache__/
+models/
