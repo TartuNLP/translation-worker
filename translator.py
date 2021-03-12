@@ -8,20 +8,11 @@ import mxnet as mx
 import sentencepiece as spm
 from sockeye.translate import inference
 
-from truecaser_ import applytc
+from truecaser import applytc
 
 
 logger = logging.getLogger("nmt_service")
 
-def parse_domains(factors):
-    parsed_factors = {}
-    for k, v in factors.items():
-        if v:
-            _tmp = {"factors": v}
-            if len(v) == 1:
-                _tmp["used"] = False
-            parsed_factors[k] = _tmp
-    return parsed_factors
 
 class Translator:
     models = None

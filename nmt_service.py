@@ -5,19 +5,24 @@ from typing import Dict, Any, Optional
 
 from nltk import sent_tokenize
 from marshmallow import Schema, fields, validate, ValidationError
-import pika
 
 from nauron import Response, Service, MQConsumer
 
 import settings
-from translator import Translator, parse_domains
-
+from translator import Translator
 
 logger = logging.getLogger("nmt_service")
 
 class TranslationService(Service):
-    def __init__(self, request_schema: Schema(), engine: Translator, char_limit: int = 10000):
-        self.schema = request_schema
+    def __init__(self, engine: Translator, char_limit: int = 10000):
+        class NMTSchema(Schema):
+            text = fields.Raw(validate=(lambda obj: type(obj) in [str, list]))
+            src = fields.Str()
+            tgt = fields.Str(missing=factors['lang']['factors'][0],
+                             validate=validate.OneOf(factors['lang']['mapping'].keys()))
+            domain = fields.Str(missing="")
+
+        self.schema = NMTSchema
         self.char_limit = char_limit
         # Load model
         self.engine = engine
@@ -69,35 +74,18 @@ class TranslationService(Service):
             return Response({'result': translations}, mimetype="application/json")
 
 
-
 if __name__ == "__main__":
-    mq_parameters = pika.ConnectionParameters \
-        (host=settings.MQ_HOST, port=settings.MQ_PORT,
-         credentials=pika.credentials.PlainCredentials(username=settings.MQ_USERNAME,
-                                                       password=settings.MQ_PASSWORD))
+    factors = settings.FACTORS
+    mq_parameters = settings.MQ_PARAMS
 
-    factors = parse_domains({factor:settings.FACTORS.setdefault(factor, ['{}0'.format(factor)]) for
-                             factor in settings.FACTOR_SEQUENCE})
-    factors["sequence"] = settings.FACTOR_SEQUENCE
-    for factor in settings.FACTOR_SEQUENCE:
-        factors[factor]['mapping'] = {**settings.ALT_FACTORS.setdefault(factor, {}),
-                                      **{v:v for v in factors[factor]['factors']}}
-
-    logger.info("Factors: {}".format(factors))
     translation_engine = Translator(settings.NMT_MODEL, settings.SPM_MODEL, settings.TC_MODEL, settings.CPU, factors)
     logger.info("All models loaded")
 
-    class NMTSchema(Schema):
-        text = fields.Raw(validate=(lambda obj: type(obj) in [str, list]))
-        src = fields.Str()
-        tgt = fields.Str(missing=factors['lang']['factors'][0],
-                         validate=validate.OneOf(factors['lang']['mapping'].keys()))
-        domain = fields.Str(missing="")
+    worker = MQConsumer(service=TranslationService(translation_engine, settings.CHAR_LIMIT),
+                        connection_parameters=mq_parameters,
+                        exchange_name=settings.MQ_EXCHANGE,
+                        queue_name=settings.MQ_QUEUE_NAME,
+                        alt_routes=settings.MQ_ALT_ROUTES)
+    worker.start()
 
 
-    service = MQConsumer(service=TranslationService(NMTSchema, translation_engine, settings.CHAR_LIMIT),
-                         connection_parameters=mq_parameters,
-                         exchange_name=settings.MQ_EXCHANGE,
-                         queue_name=settings.MQ_QUEUE_NAME,
-                         alt_routes=settings.MQ_ALT_ROUTES)
-    service.start()
