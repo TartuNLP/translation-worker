@@ -18,8 +18,8 @@ class TranslationService(Service):
         class NMTSchema(Schema):
             text = fields.Raw(validate=(lambda obj: type(obj) in [str, list]))
             src = fields.Str()
-            tgt = fields.Str(missing=factors['lang']['factors'][0],
-                             validate=validate.OneOf(factors['lang']['mapping'].keys()))
+            tgt = fields.Str(missing=engine.factors['lang']['factors'][0],
+                             validate=validate.OneOf(engine.factors['lang']['mapping'].keys()))
             domain = fields.Str(missing="")
 
         self.schema = NMTSchema
