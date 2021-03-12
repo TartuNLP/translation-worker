@@ -3,9 +3,10 @@ from os import environ
 from argparse import ArgumentParser, FileType
 from configparser import ConfigParser
 
+import pika
 from dotenv import load_dotenv
 
-def load_config() -> ConfigParser:
+def _load_config() -> ConfigParser:
     parser = ArgumentParser(
         description="Backend NMT server for Sockeye models."
     )
@@ -17,7 +18,29 @@ def load_config() -> ConfigParser:
     config.read(args.config_file.name)
     return config
 
-_config = load_config()
+def _parse_factors():
+    factors = eval(_config['factors']['factors'])
+    sequence = eval(_config['factors']['sequence'])
+    alt_factors = eval(_config['factors']['alt_factors'])
+
+    factors = {factor:factors.setdefault(factor, ['{}0'.format(factor)]) for factor in sequence}
+    parsed_factors = {}
+    for k, v in factors.items():
+        if v:
+            _tmp = {"factors": v}
+            if len(v) == 1:
+                _tmp["used"] = False
+            parsed_factors[k] = _tmp
+
+    parsed_factors["sequence"] = sequence
+
+    for factor in sequence:
+        parsed_factors[factor]['mapping'] = {**alt_factors.setdefault(factor, {}),
+                                             **{v:v for v in parsed_factors[factor]['factors']}}
+    return parsed_factors
+
+
+_config = _load_config()
 logging.config.fileConfig('config/logging.conf', defaults={'logfile': _config['general']['logfile']})
 
 load_dotenv("config/.env")
@@ -25,10 +48,10 @@ load_dotenv("config/.env")
 CPU = eval(_config['general']['cpu'])
 CHAR_LIMIT = eval(_config['general']['char_limit'])
 
-MQ_HOST = environ.get('MQ_HOST')
-MQ_PORT = environ.get('MQ_PORT')
-MQ_USERNAME = environ.get('MQ_USERNAME')
-MQ_PASSWORD = environ.get('MQ_PASSWORD')
+MQ_PARAMS = pika.ConnectionParameters \
+    (host=environ.get('MQ_HOST'), port=environ.get('MQ_PORT'),
+     credentials=pika.credentials.PlainCredentials(username=environ.get('MQ_USERNAME'),
+                                                   password=environ.get('MQ_PASSWORD')))
 
 MQ_EXCHANGE = _config['rabbitmq']['exchange']
 MQ_QUEUE_NAME = _config['rabbitmq']['queue_name']
@@ -38,6 +61,4 @@ NMT_MODEL = _config['models']['nmt']
 SPM_MODEL = _config['models']['spm']
 TC_MODEL = _config['models']['tc']
 
-FACTOR_SEQUENCE = eval(_config['factors']['sequence'])
-FACTORS = eval(_config['factors']['factors'])
-ALT_FACTORS = eval(_config['factors']['alt_factors'])
+FACTORS = _parse_factors()
