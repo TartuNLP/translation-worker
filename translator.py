@@ -88,6 +88,7 @@ class Translator:
 
 def load_sockeye_v1_translator_models(model_folders, ctx=mx.gpu()):
     logger.info(f"Loading Sockeye models. MXNET context: {ctx}")
+    # TODO move beam size, batch size, etc to config file
     models, source_vocabs, target_vocab = inference.load_models(
         context=ctx,
         max_input_len=None,
