@@ -36,7 +36,7 @@ class TranslationService(Service):
         delimiters = None
         if type(body['text']) == str:
             text = body['text']
-            sentences = sent_tokenize(body['text'])
+            sentences = [sent.strip() for sent in sent_tokenize(body['text'])]
             try:
                 delimiters = []
                 for sent in sentences:
@@ -47,7 +47,7 @@ class TranslationService(Service):
             except ValueError:
                 delimiters = ['', *[' ' for _ in range(len(sentences)-1)], '']
         else:
-            sentences = body['text']
+            sentences = [sent.strip() for sent in body['text']]
 
         length = sum([len(sent) for sent in sentences])
 
