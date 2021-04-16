@@ -34,7 +34,7 @@ To run the RabbitMQ-based service, run `nmt_service.py` instead of `app.py` and 
  `config/.env` or as environment variables. Running this service is also possible using the included Dockerfile.
   
 ### Requirements
-The repository contains a submodule used for truecasing, therefore use the `--recurse-submodules` flag during cloning
+The repository contains submodules used for truecasing and RabbitMQ communication, therefore use the `--recurse-submodules` flag during cloning
  or use `git submodule update --init` after cloning.
 
 The following steps are required to install all prerequisites in a CPU environment. In a GPU-based installation
@@ -43,7 +43,8 @@ The following steps are required to install all prerequisites in a CPU environme
  models used in this repository will not work with newer Sockeye versions.
 ```
 conda env create -f environment.yml -n nmt
-git clone https://github.com/TartuNLP/nauron.git && pip install -e nauron/
+conda activate nmt
+pip install -e nauron/
 python -c "import nltk; nltk.download(\"punkt\"); nltk.download(\"cmudict\")"
 pip install sockeye==1.18.106 --no-deps
 ```

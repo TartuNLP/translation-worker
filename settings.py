@@ -44,6 +44,7 @@ _config = _load_config()
 logging.config.fileConfig('config/logging.conf', defaults={'logfile': _config['general']['logfile']})
 
 load_dotenv("config/.env")
+load_dotenv("config/sample.env")
 
 CPU = eval(_config['general']['cpu'])
 CHAR_LIMIT = eval(_config['general']['char_limit'])
