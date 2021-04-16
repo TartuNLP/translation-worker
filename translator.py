@@ -53,7 +53,8 @@ class Translator:
         postproc_sent = postproc_sent.replace("▁", " ").split()
 
         # Do truecasing
-        postproc_sent[0] = postproc_sent[0].capitalize()
+        if postproc_sent:
+            postproc_sent[0] = postproc_sent[0].capitalize()
 
         res = " ".join(postproc_sent)
 
