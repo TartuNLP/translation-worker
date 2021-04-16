@@ -21,7 +21,7 @@ factors = settings.FACTORS
 translation_engine = Translator(settings.NMT_MODEL, settings.SPM_MODEL, settings.TC_MODEL, settings.CPU, factors)
 logger.info("All models loaded")
 
-service_conf = ServiceConf(name='bert',
+service_conf = ServiceConf(name='translation',
                            endpoint='/translation',
                            engines= {'public': TranslationService(translation_engine, settings.CHAR_LIMIT)})
 
