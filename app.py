@@ -30,4 +30,4 @@ app.add_url_rule(service_conf.endpoint, view_func=Endpoint.as_view(service_conf.
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(threaded=False)
