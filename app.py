@@ -18,7 +18,9 @@ CORS(app)
 
 factors = settings.FACTORS
 
-translation_engine = Translator(settings.NMT_MODEL, settings.SPM_MODEL, settings.TC_MODEL, settings.CPU, factors)
+translation_engine = Translator(settings.NMT_MODEL, settings.SPM_MODEL_PREFIX, settings.DICTIONARY_PATH,
+                                    settings.CPU, settings.FACTORS, max_sentences=settings.MAX_SENTS,
+                                    max_tokens=settings.MAX_TOKENS, beam_size=settings.BEAM)
 logger.info("All models loaded")
 
 service_conf = ServiceConf(name='translation',
