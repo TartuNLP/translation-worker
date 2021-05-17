@@ -11,6 +11,7 @@ RUN conda env create -f environment.yml -n nmt && rm environment.yml
 SHELL ["conda", "run", "-n", "nmt", "/bin/bash", "-c"]
 RUN python -c "import nltk; nltk.download(\"punkt\"); nltk.download(\"cmudict\")"
 SHELL ["/bin/bash", "-c"]
+ENV PYTHONIOENCODING=utf-8
 
 VOLUME /nmt/models
 

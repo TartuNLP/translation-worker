@@ -1,4 +1,4 @@
-import os
+import logging
 import copy
 from typing import Dict, List, Iterator, Any, Optional
 
@@ -16,6 +16,7 @@ import torch
 from torch import Tensor, LongTensor
 from torch.nn import ModuleList, Module
 
+logger = logging.getLogger(__name__)
 
 class ModularHubInterface(Module):
     def __init__(
@@ -89,10 +90,15 @@ class ModularHubInterface(Module):
         return sentence.replace(" ", "").replace("\u2581", " ").strip()
 
     def encode(self, sentence: str, language: str) -> LongTensor:
-        return self.binarize(self.apply_bpe(sentence, language), language)
+        bpe_token_sent = self.apply_bpe(sentence, language)
+        logger.info(f"Preprocessed: {sentence} into {bpe_token_sent}.")
+        return self.binarize(bpe_token_sent, language)
 
     def decode(self, tokens: Tensor, language: str) -> str:
-        return self.remove_bpe(self.string(tokens, language))
+        bpe_token_sent = self.string(tokens, language)
+        decoded_sent = self.remove_bpe(bpe_token_sent)
+        logger.info(f"Postprocessed: {bpe_token_sent} into {decoded_sent}.")
+        return decoded_sent
 
     def translate(
             self,
@@ -112,6 +118,7 @@ class ModularHubInterface(Module):
         :param max_tokens: max number of tokens in each batch, all sentences must be shorter than max_tokens.
         :return: list of translations corresponding to the input sentences
         """
+        logger.info(f"Translating from {src_language} to {tgt_language}")
         tokenized_sentences = [self.encode(sentence, src_language) for sentence in sentences]
         batched_hypos = self._generate(
             tokenized_sentences,
