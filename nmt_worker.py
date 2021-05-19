@@ -16,15 +16,23 @@ logger = logging.getLogger("nmt_service")
 
 class TranslationWorker(Worker):
     def __init__(self, nmt_model, spm_prefix, dict_path, cpu, factors, max_sentences, max_tokens, beam_size, char_limit: int = 10000):
-        self.engine = Translator(nmt_model, spm_prefix, dict_path, cpu, factors, max_sentences, max_tokens, beam_size)
+        self.engine = Translator(fairseq_model_path=nmt_model,
+                                 spm_prefix=spm_prefix,
+                                 dict_dir_path=dict_path,
+                                 use_cpu=cpu,
+                                 factors=factors,
+                                 max_sentences=max_sentences,
+                                 max_tokens=max_tokens,
+                                 beam_size=beam_size
+                                 )
         logger.info("All models loaded")
 
         class NMTSchema(Schema):
             text = fields.Raw(validate=(lambda obj: type(obj) in [str, list]))
-            src = fields.Str(missing=self.engine.factors['lang']['factors'][0],
-                             validate=validate.OneOf(engine.factors['lang']['mapping'].keys()))
-            tgt = fields.Str(missing=self.engine.factors['lang']['factors'][0],
-                             validate=validate.OneOf(engine.factors['lang']['mapping'].keys()))
+            src = fields.Str(missing=factors['lang']['factors'][0],
+                             validate=validate.OneOf(factors['lang']['mapping'].keys()))
+            tgt = fields.Str(missing=factors['lang']['factors'][0],
+                             validate=validate.OneOf(factors['lang']['mapping'].keys()))
             domain = fields.Str(missing="")
             application = fields.Str(missing=None)
 
