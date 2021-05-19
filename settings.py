@@ -1,5 +1,6 @@
 import logging.config
 from os import environ
+from pathlib import Path
 from argparse import ArgumentParser, FileType
 from configparser import ConfigParser
 
@@ -10,7 +11,6 @@ def _load_config() -> ConfigParser:
     parser = ArgumentParser(
         description="Backend NMT server for Sockeye models."
     )
-
     parser.add_argument('--config-file', type=FileType('r'), default='config/config.ini', help="Path to config file.")
     args = parser.parse_args()
 
@@ -41,7 +41,9 @@ def _parse_factors():
 
 
 _config = _load_config()
-logging.config.fileConfig('config/logging.conf', defaults={'logfile': _config['general']['logfile']})
+_log_path = _config['general']['logfile']
+Path(_log_path).parents[0].mkdir(parents=True, exist_ok=True)
+logging.config.fileConfig('config/logging.ini', defaults={'logfile': _log_path})
 
 load_dotenv("config/.env")
 load_dotenv("config/sample.env")
@@ -54,8 +56,8 @@ MQ_PARAMS = pika.ConnectionParameters \
      credentials=pika.credentials.PlainCredentials(username=environ.get('MQ_USERNAME'),
                                                    password=environ.get('MQ_PASSWORD')))
 
-MQ_EXCHANGE = _config['rabbitmq']['exchange']
-MQ_QUEUE_NAME = _config['rabbitmq']['queue_name']
+SERVICE_NAME = _config['rabbitmq']['exchange']
+ROUTING_KEY = _config['rabbitmq']['queue_name']
 MQ_ALT_ROUTES = eval(_config['rabbitmq']['alt_routes'])
 
 NMT_MODEL = _config['models']['nmt']
