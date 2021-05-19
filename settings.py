@@ -59,7 +59,11 @@ MQ_QUEUE_NAME = _config['rabbitmq']['queue_name']
 MQ_ALT_ROUTES = eval(_config['rabbitmq']['alt_routes'])
 
 NMT_MODEL = _config['models']['nmt']
-SPM_MODEL = _config['models']['spm']
-TC_MODEL = _config['models']['tc']
+SPM_MODEL_PREFIX = _config['models']['spm_prefix']
+DICTIONARY_PATH = _config['models']['dicts']
+
+MAX_SENTS = int(_config['inference']['max_sentences'])
+MAX_TOKENS = int(_config['inference']['max_tokens'])
+BEAM = int(_config['inference']['beam_size'])
 
 FACTORS = _parse_factors()
