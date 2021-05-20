@@ -13,11 +13,13 @@ from translator import Translator
 
 logger = logging.getLogger("nmt_service")
 
+
 class TranslationService(Service):
     def __init__(self, engine: Translator, char_limit: int = 10000):
         class NMTSchema(Schema):
             text = fields.Raw(validate=(lambda obj: type(obj) in [str, list]))
-            src = fields.Str()
+            src = fields.Str(missing=engine.factors['lang']['factors'][0],
+                             validate=validate.OneOf(engine.factors['lang']['mapping'].keys()))
             tgt = fields.Str(missing=engine.factors['lang']['factors'][0],
                              validate=validate.OneOf(engine.factors['lang']['mapping'].keys()))
             domain = fields.Str(missing="")
@@ -45,7 +47,7 @@ class TranslationService(Service):
                     text = text[idx + len(sent):]
                 delimiters.append(text)
             except ValueError:
-                delimiters = ['', *[' ' for _ in range(len(sentences)-1)], '']
+                delimiters = ['', *[' ' for _ in range(len(sentences) - 1)], '']
         else:
             sentences = [sent.strip() for sent in body['text']]
 
@@ -61,15 +63,16 @@ class TranslationService(Service):
                                     f"Maximum request size is {self.char_limit} characters.",
                             http_status_code=413)
         else:
-            sent_factors = {'lang': self.engine.factors['lang']['mapping'][body['tgt']]}
+            sent_factors = {'src_lang': self.engine.factors['lang']['mapping'][body['src']],
+                            'tgt_lang': self.engine.factors['lang']['mapping'][body['tgt']]}
             if 'domain' in self.engine.factors:
                 if body['domain'] and body['domain'] in self.engine.factors['domain']['mapping']:
                     sent_factors['domain'] = self.engine.factors['domain']['mapping'][body['domain']]
                 else:
                     sent_factors['domain'] = self.engine.factors['domain']['factors'][0]
-            translations, _, _, _ = self.engine.translate(sentences, sent_factors)
+            translations = self.engine.translate(sentences, sent_factors)
             if delimiters:
-                translations = ''.join(itertools.chain.from_iterable(zip(delimiters, translations)))+delimiters[-1]
+                translations = ''.join(itertools.chain.from_iterable(zip(delimiters, translations))) + delimiters[-1]
 
             return Response({'result': translations}, mimetype="application/json")
 
@@ -78,7 +81,9 @@ if __name__ == "__main__":
     factors = settings.FACTORS
     mq_parameters = settings.MQ_PARAMS
 
-    translation_engine = Translator(settings.NMT_MODEL, settings.SPM_MODEL, settings.TC_MODEL, settings.CPU, factors)
+    translation_engine = Translator(settings.NMT_MODEL, settings.SPM_MODEL_PREFIX, settings.DICTIONARY_PATH,
+                                    settings.CPU, settings.FACTORS, max_sentences=settings.MAX_SENTS,
+                                    max_tokens=settings.MAX_TOKENS, beam_size=settings.BEAM)
     logger.info("All models loaded")
 
     worker = MQConsumer(service=TranslationService(translation_engine, settings.CHAR_LIMIT),
@@ -87,5 +92,3 @@ if __name__ == "__main__":
                         queue_name=settings.MQ_QUEUE_NAME,
                         alt_routes=settings.MQ_ALT_ROUTES)
     worker.start()
-
-

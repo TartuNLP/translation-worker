@@ -9,11 +9,9 @@ COPY . .
 # Info: https://pythonspeed.com/articles/activate-conda-dockerfile/
 RUN conda env create -f environment.yml -n nmt && rm environment.yml
 SHELL ["conda", "run", "-n", "nmt", "/bin/bash", "-c"]
-# TODO remove
-RUN pip install -e nauron/ && \
-python -c "import nltk; nltk.download(\"punkt\"); nltk.download(\"cmudict\")"
-RUN pip install sockeye==1.18.106 --no-deps
+RUN python -c "import nltk; nltk.download(\"punkt\"); nltk.download(\"cmudict\")"
 SHELL ["/bin/bash", "-c"]
+ENV PYTHONIOENCODING=utf-8
 
 VOLUME /nmt/models
 

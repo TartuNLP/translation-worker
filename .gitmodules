@@ -1,6 +1,3 @@
-[submodule "truecaser"]
-	path = truecaser
-	url = https://github.com/TartuNLP/truecaser
 [submodule "nauron"]
 	path = nauron
 	url = https://github.com/TartuNLP/nauron
