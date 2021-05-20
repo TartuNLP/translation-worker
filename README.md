@@ -46,6 +46,6 @@ Response:
 In case the text field contains a string, it is automatically split into sentences. In case it contains a list, the
  service assumes this list to be a list of sentences and will not do any further splitting.
  
-To run the RabbitMQ-based service, run `nmt_service.py` instead of `app.py`. Running this service is also possible using the included Dockerfile.
+To run the RabbitMQ-based worker only, run `nmt_worker.py` instead of `app.py`. Running this service is also possible using the included Dockerfile.
   
 
