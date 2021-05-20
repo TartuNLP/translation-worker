@@ -8,9 +8,7 @@ import pika
 from dotenv import load_dotenv
 
 def _load_config() -> ConfigParser:
-    parser = ArgumentParser(
-        description="Backend NMT server for Sockeye models."
-    )
+    parser = ArgumentParser()
     parser.add_argument('--config-file', type=FileType('r'), default='config/config.ini', help="Path to config file.")
     args = parser.parse_args()
 
