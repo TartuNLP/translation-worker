@@ -5,9 +5,6 @@ The service is designed to connect to a RabbitMQ server to process translation r
  included a demo Flask application that can be run standalone.
 
 ### Requirements
-The repository contains submodules used for truecasing and RabbitMQ communication, 
-therefore use the `--recurse-submodules` flag during cloning or `git submodule update --init` after cloning.
-
 The following steps are required to install all prerequisites in a CPU Conda environment.
 
 ```
