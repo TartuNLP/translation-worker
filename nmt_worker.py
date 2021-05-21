@@ -26,7 +26,7 @@ class TranslationWorker(Worker):
             tgt = fields.Str(missing=self.engine.factors['lang']['factors'][0],
                              validate=validate.OneOf(self.engine.factors['lang']['mapping'].keys()))
             domain = fields.Str(missing="")
-            application = fields.Str(missing="Unknown")
+            application = fields.Str(allow_none=True)
 
         self.schema = NMTSchema
         self.char_limit = char_limit
