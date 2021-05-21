@@ -15,8 +15,9 @@ logger = logging.getLogger("nmt_service")
 
 
 class TranslationWorker(Worker):
+    engine: Translator = None
     def __init__(self, nmt_model: str, spm_model: str, tc_model, cpu: bool, factors: dict, char_limit: int = 10000):
-        self.engine = Translator(nmt_model, spm_model, tc_model, cpu, factors)
+        self._init_translator(nmt_model, spm_model, tc_model, cpu, factors)
         logger.info("All models loaded")
 
         class NMTSchema(Schema):
@@ -29,6 +30,9 @@ class TranslationWorker(Worker):
 
         self.schema = NMTSchema
         self.char_limit = char_limit
+
+    def _init_translator(self, nmt_model, spm_model, tc_model, cpu, factors):
+        self.engine = Translator(nmt_model, spm_model, tc_model, cpu, factors)
 
     def process_request(self, body: Dict[str, Any], _: Optional[str] = None) -> Response:
         try:
