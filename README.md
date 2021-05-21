@@ -5,9 +5,6 @@ The service is designed to connect to a RabbitMQ server to process translation r
  included a demo Flask application that can be run standalone.
 
 ### Requirements
-The repository contains submodules used for truecasing and RabbitMQ communication, 
-therefore use the `--recurse-submodules` flag during cloning or `git submodule update --init` after cloning.
-
 The following steps are required to install all prerequisites in a CPU Conda environment.
 
 ```
@@ -49,6 +46,6 @@ Response:
 In case the text field contains a string, it is automatically split into sentences. In case it contains a list, the
  service assumes this list to be a list of sentences and will not do any further splitting.
  
-To run the RabbitMQ-based service, run `nmt_service.py` instead of `app.py`. Running this service is also possible using the included Dockerfile.
+To run the RabbitMQ-based worker only, run `nmt_worker.py` instead of `app.py`. Running this service is also possible using the included Dockerfile.
   
 
