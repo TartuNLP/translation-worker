@@ -42,6 +42,7 @@ class TranslationWorker(Worker):
     def process_request(self, body: Dict[str, Any], _: Optional[str] = None) -> Response:
         try:
             body = self.schema().load(body)
+            logger.info(f"Request source: {body['application']}")
         except ValidationError as error:
             return Response(content=error.messages, http_status_code=400)
 
