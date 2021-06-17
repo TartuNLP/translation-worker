@@ -11,7 +11,7 @@ from nauron import Response, Worker
 import settings
 from translator import Translator
 
-import statistics
+import numpy as np
 from transquest.algo.sentence_level.siamesetransquest.run_model import SiameseTransQuestModel
 
 logger = logging.getLogger("nmt_service")
@@ -103,7 +103,7 @@ class TranslationWorker(Worker):
 
             if self.qe_model is not None:
                 predictions = self.qe_model.predict(zip(sentences, translations))
-                return Response({'result': translations, 'qeScore': statistics.mean(predictions)}, mimetype="application/json")
+                return Response({'result': translations, 'qeScore': np.mean(predictions)}, mimetype="application/json")
 
             return Response({'result': translations}, mimetype="application/json")
 
