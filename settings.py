@@ -49,7 +49,10 @@ load_dotenv("config/sample.env")
 CPU = eval(_config['general']['cpu'])
 CHAR_LIMIT = eval(_config['general']['char_limit'])
 
-QE_MODEL_NAME_OR_PATH = _config['quality_estimation']['model_name_or_path']
+if 'quality_estimation' in _config and 'model_name_or_path' in _config['quality_estimation']:
+    QE_MODEL_NAME_OR_PATH = _config['quality_estimation']['model_name_or_path']
+else:
+    QE_MODEL_NAME_OR_PATH = None
 
 MQ_PARAMS = pika.ConnectionParameters \
     (host=environ.get('MQ_HOST'), port=environ.get('MQ_PORT'),
