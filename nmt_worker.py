@@ -103,7 +103,7 @@ class TranslationWorker(Worker):
 
             if self.qe_model is not None:
                 predictions = self.qe_model.predict(zip(sentences, translations))
-                return Response({'result': translations, 'qeScore': np.mean(predictions)}, mimetype="application/json")
+                return Response({'result': translations, 'qeScore': float(np.mean(predictions))}, mimetype="application/json")
 
             return Response({'result': translations}, mimetype="application/json")
 
