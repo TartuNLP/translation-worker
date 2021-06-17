@@ -11,11 +11,25 @@ from nauron import Response, Worker
 import settings
 from translator import Translator
 
+import numpy as np
+from transquest.algo.sentence_level.siamesetransquest.run_model import SiameseTransQuestModel
+
 logger = logging.getLogger("nmt_service")
 
 
 class TranslationWorker(Worker):
-    def __init__(self, nmt_model, spm_prefix, dict_path, cpu, factors, max_sentences, max_tokens, beam_size, char_limit: int = 10000):
+    def __init__(
+            self,
+            nmt_model,
+            spm_prefix,
+            dict_path,
+            cpu,
+            factors,
+            max_sentences,
+            max_tokens, beam_size,
+            char_limit: int = 10000,
+            qe_model_name_or_path=None
+    ):
         self.engine = Translator(fairseq_model_path=nmt_model,
                                  spm_prefix=spm_prefix,
                                  dict_dir_path=dict_path,
@@ -25,6 +39,8 @@ class TranslationWorker(Worker):
                                  max_tokens=max_tokens,
                                  beam_size=beam_size
                                  )
+        self.qe_model = SiameseTransQuestModel(qe_model_name_or_path) if qe_model_name_or_path is not None else None
+
         logger.info("All models loaded")
 
         class NMTSchema(Schema):
@@ -85,6 +101,10 @@ class TranslationWorker(Worker):
             if delimiters:
                 translations = ''.join(itertools.chain.from_iterable(zip(delimiters, translations))) + delimiters[-1]
 
+            if self.qe_model is not None:
+                predictions = self.qe_model.predict(zip(sentences, translations))
+                return Response({'result': translations, 'qeScore': np.mean(predictions)}, mimetype="application/json")
+
             return Response({'result': translations}, mimetype="application/json")
 
 
@@ -97,7 +117,8 @@ if __name__ == "__main__":
                                factors=settings.FACTORS,
                                max_sentences=settings.MAX_SENTS,
                                max_tokens=settings.MAX_TOKENS,
-                               beam_size=settings.BEAM)
+                               beam_size=settings.BEAM,
+                               qe_model_name_or_path=settings.QE_MODEL_NAME_OR_PATH)
     worker.start(connection_parameters=mq_parameters,
                  service_name=settings.SERVICE_NAME,
                  routing_key=settings.ROUTING_KEY,
