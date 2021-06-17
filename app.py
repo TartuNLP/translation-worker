@@ -22,7 +22,8 @@ nmt.add_worker(TranslationWorker(nmt_model=settings.NMT_MODEL,
                                  factors=settings.FACTORS,
                                  max_sentences=settings.MAX_SENTS,
                                  max_tokens=settings.MAX_TOKENS,
-                                 beam_size=settings.BEAM))
+                                 beam_size=settings.BEAM,
+                                 qe_model_name_or_path=settings.QE_MODEL_NAME_OR_PATH))
 
 @app.post('/translation')
 def translate():
