@@ -102,8 +102,12 @@ class TranslationWorker(Worker):
                 translations = ''.join(itertools.chain.from_iterable(zip(delimiters, translations))) + delimiters[-1]
 
             if self.qe_model is not None:
-                predictions = self.qe_model.predict(zip(sentences, translations))
-                return Response({'result': translations, 'qeScore': float(np.mean(predictions))}, mimetype="application/json")
+                raw_preds = self.qe_model.predict(zip(sentences, translations))
+                predictions = [float(raw_preds)] if len(sentences) == 1 else list(map(lambda x: float(x), raw_preds))
+
+                qe_score = float(np.mean(predictions)) if type(body['text']) == str else predictions
+
+                return Response({'result': translations, 'qeScore': qe_score}, mimetype="application/json")
 
             return Response({'result': translations}, mimetype="application/json")
 
