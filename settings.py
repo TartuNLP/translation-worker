@@ -62,6 +62,8 @@ NMT_MODEL = _config['models']['nmt']
 SPM_MODEL_PREFIX = _config['models']['spm_prefix']
 DICTIONARY_PATH = _config['models']['dicts']
 
+LID_MODEL = _config['models']['lid'] if 'lid' in _config['models'] else None
+
 MAX_SENTS = int(_config['inference']['max_sentences'])
 MAX_TOKENS = int(_config['inference']['max_tokens'])
 BEAM = int(_config['inference']['beam_size'])
