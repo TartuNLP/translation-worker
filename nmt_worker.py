@@ -44,8 +44,7 @@ class TranslationWorker(Worker):
 
         class NMTSchema(Schema):
             text = fields.Raw(validate=(lambda obj: type(obj) in [str, list]))
-            src = fields.Str(missing=None,
-                             validate=validate.OneOf(factors['lang']['mapping'].keys()))
+            src = fields.Str(missing=None)
             tgt = fields.Str(missing=self.default_lang,
                              validate=validate.OneOf(factors['lang']['mapping'].keys()))
             domain = fields.Str(missing="")
