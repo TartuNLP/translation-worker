@@ -22,7 +22,7 @@ class TranslationWorker(Worker):
 
         class NMTSchema(Schema):
             text = fields.Raw(validate=(lambda obj: type(obj) in [str, list]))
-            src = fields.Str()
+            src = fields.Str(missing=None)
             tgt = fields.Str(missing=self.engine.factors['lang']['factors'][0],
                              validate=validate.OneOf(self.engine.factors['lang']['mapping'].keys()))
             domain = fields.Str(missing="")
@@ -37,7 +37,11 @@ class TranslationWorker(Worker):
     def process_request(self, body: Dict[str, Any], _: Optional[str] = None) -> Response:
         try:
             body = self.schema().load(body)
-            logger.info(f"Request source: {body['application']}")
+            logger.info(f"Request received: {{"
+                        f"application: {body['application']}, "
+                        f"src: {body['src']}, "
+                        f"tgt: {body['tgt']}, "
+                        f"domain: {body['domain']}}}")
         except ValidationError as error:
             return Response(content=error.messages, http_status_code=400)
 

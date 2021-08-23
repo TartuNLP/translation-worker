@@ -1,1 +1,6 @@
 /models
+config/*.env
+.idea/
+__pycache__/
+.git/
+.gitignore
