@@ -44,11 +44,13 @@ class TranslationWorker(Worker):
 
         class NMTSchema(Schema):
             text = fields.Raw(validate=(lambda obj: type(obj) in [str, list]))
-            src = fields.Str(missing=None)
+            src = fields.Str(allow_none=True,
+                             missing=None)
             tgt = fields.Str(missing=self.default_lang,
                              validate=validate.OneOf(factors['lang']['mapping'].keys()))
             domain = fields.Str(missing="")
-            application = fields.Str(allow_none=True)
+            application = fields.Str(allow_none=True,
+                                     missing=None)
 
         self.lid_model = fasttext.load_model(lid_model) if lid_model is not None else None
         self.schema = NMTSchema
