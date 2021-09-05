@@ -1,11 +1,11 @@
-# Neurotõlge
+# TartuNLP translate
 Mitmekeelne mitme-valdkonnaline neuromasintõlge. Käesolev versioon toetab sisend- ja väljundkeelena seitset keelt: eesti, läti, leedu, inglise, vene, saksa ja soome.
 
 Arengu staatust kajastab [GitHubi leht](https://github.com/tartunlp/kama).
 
 ## Kasutamine
 
-Neurotõlge sisaldab skripte ja treenitud mudeleid. Seda saab kasutada otse Linuxi skriptina või lihtsa serverina, mis laeb mudelid mällu ning vastab tõlkimispäringutele.
+Käesolev masintõlkepakett sisaldab skripte ja treenitud mudeleid. Seda saab kasutada otse Linuxi skriptina või lihtsa serverina, mis laeb mudelid mällu ning vastab tõlkimispäringutele.
 
 Töötav veebiversioon asub aadressil https://translate.ut.ee, mis töötab nii veebidemona kui ka võimaldab lõimimist SDL Studio, MemoQ ja MemSource tõlkeraamistikega.
 
