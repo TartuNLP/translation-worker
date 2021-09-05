@@ -9,8 +9,8 @@ COPY environment.yml .
 RUN conda env create -f environment.yml -n nmt && rm environment.yml
 SHELL ["conda", "run", "-n", "nmt", "/bin/bash", "-c"]
 RUN python -c "import nltk; nltk.download(\"punkt\"); nltk.download(\"cmudict\")"
-RUN pip install sockeye==1.18.106 --no-deps
 SHELL ["/bin/bash", "-c"]
+ENV PYTHONIOENCODING=utf-8
 
 COPY . .
 VOLUME /app/models

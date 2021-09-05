@@ -8,9 +8,7 @@ import pika
 from dotenv import load_dotenv
 
 def _load_config() -> ConfigParser:
-    parser = ArgumentParser(
-        description="Backend NMT server for Sockeye models."
-    )
+    parser = ArgumentParser()
     parser.add_argument('--config-file', type=FileType('r'), default='config/config.ini', help="Path to config file.")
     args = parser.parse_args()
 
@@ -61,7 +59,13 @@ ROUTING_KEY = _config['rabbitmq']['queue_name']
 MQ_ALT_ROUTES = eval(_config['rabbitmq']['alt_routes'])
 
 NMT_MODEL = _config['models']['nmt']
-SPM_MODEL = _config['models']['spm']
-TC_MODEL = _config['models']['tc']
+SPM_MODEL_PREFIX = _config['models']['spm_prefix']
+DICTIONARY_PATH = _config['models']['dicts']
+
+LID_MODEL = _config['models']['lid'] if 'lid' in _config['models'] else None
+
+MAX_SENTS = int(_config['inference']['max_sentences'])
+MAX_TOKENS = int(_config['inference']['max_tokens'])
+BEAM = int(_config['inference']['beam_size'])
 
 FACTORS = _parse_factors()

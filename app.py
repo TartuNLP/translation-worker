@@ -5,6 +5,7 @@ from flask_cors import CORS
 from nauron import Nauron
 
 import settings
+from nmt_worker import TranslationWorker
 
 logger = logging.getLogger("gunicorn.error")
 
@@ -14,14 +15,15 @@ CORS(app)
 
 nmt = app.add_service(name=settings.SERVICE_NAME)
 
-from nmt_worker import TranslationWorker
-
 nmt.add_worker(TranslationWorker(nmt_model=settings.NMT_MODEL,
-                                  spm_model=settings.SPM_MODEL,
-                                  tc_model=settings.TC_MODEL,
-                                  cpu=settings.CPU,
-                                  factors=settings.FACTORS,
-                                  char_limit=settings.CHAR_LIMIT))
+                                 spm_prefix=settings.SPM_MODEL_PREFIX,
+                                 dict_path=settings.DICTIONARY_PATH,
+                                 cpu=settings.CPU,
+                                 factors=settings.FACTORS,
+                                 max_sentences=settings.MAX_SENTS,
+                                 max_tokens=settings.MAX_TOKENS,
+                                 beam_size=settings.BEAM,
+                                 lid_model=settings.LID_MODEL))
 
 @app.post('/translation')
 def translate():
