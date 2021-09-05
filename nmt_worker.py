@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional
 from nltk import sent_tokenize
 from marshmallow import Schema, fields, validate, ValidationError
 
-from nauron import Response, Service, MQConsumer
+from nauron import Response, Worker
 
 import settings
 from translator import Translator
@@ -14,20 +14,22 @@ from translator import Translator
 logger = logging.getLogger("nmt_service")
 
 
-class TranslationService(Service):
-    def __init__(self, engine: Translator, char_limit: int = 10000):
+class TranslationWorker(Worker):
+    def __init__(self, nmt_model, spm_prefix, dict_path, cpu, factors, max_sentences, max_tokens, beam_size, char_limit: int = 10000):
+        self.engine = Translator(nmt_model, spm_prefix, dict_path, cpu, factors, max_sentences, max_tokens, beam_size)
+        logger.info("All models loaded")
+
         class NMTSchema(Schema):
             text = fields.Raw(validate=(lambda obj: type(obj) in [str, list]))
-            src = fields.Str(missing=engine.factors['lang']['factors'][0],
+            src = fields.Str(missing=self.engine.factors['lang']['factors'][0],
                              validate=validate.OneOf(engine.factors['lang']['mapping'].keys()))
-            tgt = fields.Str(missing=engine.factors['lang']['factors'][0],
+            tgt = fields.Str(missing=self.engine.factors['lang']['factors'][0],
                              validate=validate.OneOf(engine.factors['lang']['mapping'].keys()))
             domain = fields.Str(missing="")
+            application = fields.Str(missing=None)
 
         self.schema = NMTSchema
         self.char_limit = char_limit
-        # Load model
-        self.engine = engine
 
     def process_request(self, body: Dict[str, Any], _: Optional[str] = None) -> Response:
         try:
@@ -78,17 +80,16 @@ class TranslationService(Service):
 
 
 if __name__ == "__main__":
-    factors = settings.FACTORS
     mq_parameters = settings.MQ_PARAMS
-
-    translation_engine = Translator(settings.NMT_MODEL, settings.SPM_MODEL_PREFIX, settings.DICTIONARY_PATH,
-                                    settings.CPU, settings.FACTORS, max_sentences=settings.MAX_SENTS,
-                                    max_tokens=settings.MAX_TOKENS, beam_size=settings.BEAM)
-    logger.info("All models loaded")
-
-    worker = MQConsumer(service=TranslationService(translation_engine, settings.CHAR_LIMIT),
-                        connection_parameters=mq_parameters,
-                        exchange_name=settings.MQ_EXCHANGE,
-                        queue_name=settings.MQ_QUEUE_NAME,
-                        alt_routes=settings.MQ_ALT_ROUTES)
-    worker.start()
+    worker = TranslationWorker(nmt_model=settings.NMT_MODEL,
+                               spm_prefix=settings.SPM_MODEL_PREFIX,
+                               dict_path=settings.DICTIONARY_PATH,
+                               cpu=settings.CPU,
+                               factors=settings.FACTORS,
+                               max_sentences=settings.MAX_SENTS,
+                               max_tokens=settings.MAX_TOKENS,
+                               beam_size=settings.BEAM)
+    worker.start(connection_parameters=mq_parameters,
+                 service_name=settings.SERVICE_NAME,
+                 routing_key=settings.ROUTING_KEY,
+                 alt_routes=settings.MQ_ALT_ROUTES)
