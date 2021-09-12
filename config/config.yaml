@@ -9,25 +9,12 @@ workers:
     routes: [ ]
     # Parameters required by the TranslationWorker
     parameters:
-      nmt_model: models/septilang/nmt
-      spm_model: models/septilang/spm/sp32.model
-      tc_model: models/septilang/tc/joint-truecase.tc
+      nmt_model: models/modular_big/modular_big.pt
+      spm_prefix: models/modular_big/spm/sp_model
+      dict_path: models/modular_big/dicts/
+      lid_model: models/modular_big/lid.176.bin
+      max_sentences: 10
+      max_tokens: 3000
+      beam_size: 5
       char_limit: 1000
-      factor_sequence: [ lang, domain, f, g ]
-      factors:
-        lang: { est: et, lav: lv, eng: en, deu: de, ger: de, lit: lt, rus: ru, fin: fi }
-        domain: { auto: pc, fml: ep, inf: os }
-      defaults:
-        domain: pc
-  smugri:
-    workspace: smugri
-    routes: [ ]
-    parameters:
-      nmt_model: models/smugri/smugri-january-2021
-      spm_model: models/smugri/spm/spm.model
-      tc_model: 
-      char_limit: 1000
-      factor_sequence: [ lang ]
-      factors:
-        lang: { est: et, fin: fi, sma: sma, sme: sme, vro: vro }
-      defaults: {}
+      languages: { est: et, lav: lv, eng: en, deu: de, ger: de, lit: lt, rus: ru, fin: fi }

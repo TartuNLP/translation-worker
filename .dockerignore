@@ -4,5 +4,6 @@ config/*.env
 __pycache__/
 .git/
 .gitignore
+truecaser/
 /logs/*
 .github

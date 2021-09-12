@@ -2,8 +2,7 @@
 
 This repository contains TartuNLP's modular multilingual neural translation models and workers to run them and 
 process requests from RabbitMQ. The current main model supports seven languages: Estonian, English, Russian, German, 
-Finnish, Latvian and Lithuanian. Additionally, there is a Finno-Ugric model (supporting Estonian, Finnish, Võro, 
-Northern Sami and Southern Sami).
+Finnish, Latvian and Lithuanian.
 
 The project is developed by the [NLP research group](https://tartunlp.ai) at the [Universty of Tartu](https://ut.ee).
 Neural machine translation can also be tested in our [web demo](https://translate.ut.ee/).
@@ -61,29 +60,17 @@ services:
       - ./models:/app/models
     depends_on:
       - rabbitmq
-  nmt_worker_smugri:
-    image: ghcr.io/tartunlp/translation-worker:latest
-      - WORKER_NAME=smugri
-      - MQ_HOST=rabbitmq
-      - MQ_PORT=5672
-      - MQ_USERNAME=${RABBITMQ_USER}
-      - MQ_PASSWORD=${RABBITMQ_PASS}
-    volumes:
-      - ./models:/app/models
-    depends_on:
-      - rabbitmq
 ```
 
 ### Manual setup
 
-The following steps have been tested on Ubuntu. The code is both CPU and GPU compatible (CUDA required), but the
-`environment.gpu.yml` file should be used for a GPU installation.
+The following steps have been tested on Ubuntu. The code is both CPU and GPU compatible (CUDA required).
 
 - Make sure you have the following prerequisites installed:
     - Conda (see https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
     - GNU Compiler Collection (`sudo apt install build-essential`)
 
-- Clone this repository with submodules
+- Clone this repository
 - Create and activate a Conda environment with all dependencies:
 
 ```
