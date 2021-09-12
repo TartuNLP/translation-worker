@@ -1,6 +1,6 @@
 # TartuNLP translation worker
 
-This repository contains TartuNLP's modular multilingual neural translation models and workers to run them and 
+This repository contains TartuNLP's modular multilingual machine translation models and workers to run them and 
 process requests from RabbitMQ. The current main model supports seven languages: Estonian, English, Russian, German, 
 Finnish, Latvian and Lithuanian.
 
