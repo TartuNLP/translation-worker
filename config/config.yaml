@@ -1,0 +1,33 @@
+service: translation
+workers:
+  septilang:
+    # Should match the workspace name parameter in the API config
+    workspace: default
+    # List of all routing keys for this worker, as specified by the routing key of the workspace, separated by dots.
+    # When routing uses language keys, all variants of 2-letter (if available) and 3-letter codes should be specified
+    # e.g. [ est.ger, est.deu, et.de ]
+    routes: [ ]
+    # Parameters required by the TranslationWorker
+    parameters:
+      nmt_model: models/septilang/nmt
+      spm_model: models/septilang/spm/sp32.model
+      tc_model: models/septilang/tc/joint-truecase.tc
+      char_limit: 1000
+      factor_sequence: [ lang, domain, f, g ]
+      factors:
+        lang: { est: et, lav: lv, eng: en, deu: de, ger: de, lit: lt, rus: ru, fin: fi }
+        domain: { auto: pc, fml: ep, inf: os }
+      defaults:
+        domain: pc
+  smugri:
+    workspace: smugri
+    routes: [ ]
+    parameters:
+      nmt_model: models/smugri/smugri-january-2021
+      spm_model: models/smugri/spm/spm.model
+      tc_model: 
+      char_limit: 1000
+      factor_sequence: [ lang ]
+      factors:
+        lang: { est: et, fin: fi, sma: sma, sme: sme, vro: vro }
+      defaults: {}

@@ -1,71 +1,41 @@
 import logging.config
 from os import environ
-from pathlib import Path
 from argparse import ArgumentParser, FileType
-from configparser import ConfigParser
-
-import pika
+import yaml
+from yaml.loader import SafeLoader
+from pika import ConnectionParameters, credentials
 from dotenv import load_dotenv
-
-def _load_config() -> ConfigParser:
-    parser = ArgumentParser()
-    parser.add_argument('--config-file', type=FileType('r'), default='config/config.ini', help="Path to config file.")
-    args = parser.parse_args()
-
-    config = ConfigParser()
-    config.read(args.config_file.name)
-    return config
-
-def _parse_factors():
-    factors = eval(_config['factors']['factors'])
-    sequence = eval(_config['factors']['sequence'])
-    alt_factors = eval(_config['factors']['alt_factors'])
-
-    factors = {factor:factors.setdefault(factor, ['{}0'.format(factor)]) for factor in sequence}
-    parsed_factors = {}
-    for k, v in factors.items():
-        if v:
-            _tmp = {"factors": v}
-            if len(v) == 1:
-                _tmp["used"] = False
-            parsed_factors[k] = _tmp
-
-    parsed_factors["sequence"] = sequence
-
-    for factor in sequence:
-        parsed_factors[factor]['mapping'] = {**alt_factors.setdefault(factor, {}),
-                                             **{v:v for v in parsed_factors[factor]['factors']}}
-    return parsed_factors
-
-
-_config = _load_config()
-_log_path = _config['general']['logfile']
-Path(_log_path).parents[0].mkdir(parents=True, exist_ok=True)
-logging.config.fileConfig('config/logging.ini', defaults={'logfile': _log_path})
 
 load_dotenv("config/.env")
 load_dotenv("config/sample.env")
 
-CPU = eval(_config['general']['cpu'])
-CHAR_LIMIT = eval(_config['general']['char_limit'])
+_parser = ArgumentParser()
+_parser.add_argument('--worker', type=str,
+                     help="The worker to load. The name should match the name in the config YML file.")
+_parser.add_argument('--config', type=FileType('r'), default='config/config.yaml',
+                     help="The config YAML file to load.")
+_parser.add_argument('--log-config', type=FileType('r'), default='config/logging.ini',
+                     help="Path to log config file.")
+_args = _parser.parse_known_args()[0]
+logging.config.fileConfig(_args.log_config.name, defaults={'worker_name': _args.worker})
 
-MQ_PARAMS = pika.ConnectionParameters \
-    (host=environ.get('MQ_HOST'), port=environ.get('MQ_PORT'),
-     credentials=pika.credentials.PlainCredentials(username=environ.get('MQ_USERNAME'),
-                                                   password=environ.get('MQ_PASSWORD')))
+with open(_args.config.name, 'r', encoding='utf-8') as f:
+    _config = yaml.load(f, Loader=SafeLoader)
 
-SERVICE_NAME = _config['rabbitmq']['exchange']
-ROUTING_KEY = _config['rabbitmq']['queue_name']
-MQ_ALT_ROUTES = eval(_config['rabbitmq']['alt_routes'])
+SERVICE_NAME = _config['service']
+WORKER_PARAMETERS = _config['workers'][_args.worker]['parameters']
 
-NMT_MODEL = _config['models']['nmt']
-SPM_MODEL_PREFIX = _config['models']['spm_prefix']
-DICTIONARY_PATH = _config['models']['dicts']
+if _config['workers'][_args.worker]:
+    ROUTES = [f'{_config["workers"][_args.worker]["workspace"]}.{route}' for route in
+              _config["workers"][_args.worker]['routes']]
+else:
+    ROUTES = [_config['workers'][_args.worker]['workspace']]
 
-LID_MODEL = _config['models']['lid'] if 'lid' in _config['models'] else None
-
-MAX_SENTS = int(_config['inference']['max_sentences'])
-MAX_TOKENS = int(_config['inference']['max_tokens'])
-BEAM = int(_config['inference']['beam_size'])
-
-FACTORS = _parse_factors()
+MQ_PARAMETERS = ConnectionParameters(
+    host=environ.get('MQ_HOST', 'localhost'),
+    port=int(environ.get('MQ_PORT', '5672')),
+    credentials=credentials.PlainCredentials(
+        username=environ.get('MQ_USERNAME', 'guest'),
+        password=environ.get('MQ_PASSWORD', 'guest')
+    )
+)

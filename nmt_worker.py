@@ -1,71 +1,59 @@
 import itertools
 import logging
-
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union
 
 from nltk import sent_tokenize
 from marshmallow import Schema, fields, validate, ValidationError
-
 from nauron import Response, Worker
 
 import settings
 from translator import Translator
 
-import fasttext
-
-logger = logging.getLogger("nmt_service")
+logger = logging.getLogger("nmt")
 
 
 class TranslationWorker(Worker):
-    def __init__(
-            self,
-            nmt_model,
-            spm_prefix,
-            dict_path,
-            cpu, factors,
-            max_sentences,
-            max_tokens,
-            beam_size,
-            char_limit: int = 10000,
-            lid_model: Optional[str] = None
-    ):
-        self.engine = Translator(fairseq_model_path=nmt_model,
-                                 spm_prefix=spm_prefix,
-                                 dict_dir_path=dict_path,
-                                 use_cpu=cpu,
-                                 factors=factors,
-                                 max_sentences=max_sentences,
-                                 max_tokens=max_tokens,
-                                 beam_size=beam_size
-                                 )
+    engine: Translator = None
+
+    def __init__(self, nmt_model: str, spm_model: str, tc_model: str, factor_sequence: list, factors: dict,
+                 defaults: dict, char_limit: int = 10000):
+
+        self.engine = Translator(nmt_model, spm_model, tc_model, factor_sequence, factors)
         logger.info("All models loaded")
 
-        self.default_lang = factors['lang']['factors'][0]
-
         class NMTSchema(Schema):
-            text = fields.Raw(validate=(lambda obj: type(obj) in [str, list]))
-            src = fields.Str(allow_none=True,
-                             missing=None)
-            tgt = fields.Str(missing=self.default_lang,
-                             validate=validate.OneOf(factors['lang']['mapping'].keys()))
-            domain = fields.Str(missing="")
-            application = fields.Str(allow_none=True,
-                                     missing=None)
+            text = fields.Raw(required=True, validate=(lambda obj: type(obj) in [str, list]))
+            src = fields.Str(missing=None)
+            tgt = fields.Str(required=True, validate=validate.OneOf(self.engine.factors['lang'].keys()))
+            domain = fields.Str(missing=None)
+            application = fields.Str(missing=None)
 
-        self.lid_model = fasttext.load_model(lid_model) if lid_model is not None else None
         self.schema = NMTSchema
         self.char_limit = char_limit
+        self.defaults = defaults
 
-    def _detect_lang_or_default(self, sentences: List[str]) -> str:
-        if self.lid_model is None:
-            return self.default_lang
-        pred_lang = self.lid_model.predict(" ".join(sentences))[0][0][9:]
-        if pred_lang in self.engine.factors['lang']['mapping'].keys():
-            logger.info(f"Detected src={pred_lang}")
-            return pred_lang
+    @staticmethod
+    def _sentence_tokenize(text: Union[str, List]) -> (List, Optional[List]):
+        """
+        Split text into sentences and save info about delimiters between them to restore linebreaks,
+        whitespaces, etc.
+        """
+        delimiters = None
+        if type(text) == str:
+            sentences = [sent.strip() for sent in sent_tokenize(text)]
+            try:
+                delimiters = []
+                for sentence in sentences:
+                    idx = text.index(sentence)
+                    delimiters.append(text[:idx])
+                    text = text[idx + len(sentence):]
+                delimiters.append(text)
+            except ValueError:
+                delimiters = ['', *[' ' for _ in range(len(sentences) - 1)], '']
         else:
-            logger.info(f"Detected src={pred_lang} not in supported languages. Defaulting to src={self.default_lang}")
-            return self.default_lang
+            sentences = [sent.strip() for sent in text]
+
+        return sentences, delimiters
 
     def process_request(self, body: Dict[str, Any], _: Optional[str] = None) -> Response:
         try:
@@ -78,22 +66,7 @@ class TranslationWorker(Worker):
         except ValidationError as error:
             return Response(content=error.messages, http_status_code=400)
 
-        delimiters = None
-        if type(body['text']) == str:
-            text = body['text']
-            sentences = [sent.strip() for sent in sent_tokenize(body['text'])]
-            try:
-                delimiters = []
-                for sent in sentences:
-                    idx = text.index(sent)
-                    delimiters.append(text[:idx])
-                    text = text[idx + len(sent):]
-                delimiters.append(text)
-            except ValueError:
-                delimiters = ['', *[' ' for _ in range(len(sentences) - 1)], '']
-        else:
-            sentences = [sent.strip() for sent in body['text']]
-
+        sentences, delimiters = self._sentence_tokenize(body['text'])
         length = sum([len(sent) for sent in sentences])
 
         if length == 0:
@@ -106,15 +79,14 @@ class TranslationWorker(Worker):
                                     f"Maximum request size is {self.char_limit} characters.",
                             http_status_code=413)
         else:
-            src_lang = body['src'] if body['src'] is not None else self._detect_lang_or_default(sentences)
-            sent_factors = {'src_lang': self.engine.factors['lang']['mapping'][src_lang],
-                            'tgt_lang': self.engine.factors['lang']['mapping'][body['tgt']]}
-            if 'domain' in self.engine.factors:
-                if body['domain'] and body['domain'] in self.engine.factors['domain']['mapping']:
-                    sent_factors['domain'] = self.engine.factors['domain']['mapping'][body['domain']]
+            sent_factors = {'lang': self.engine.factors['lang'][body['tgt']]}
+            if 'domain' in self.engine.factor_sequence:
+                if body['domain'] is not None and body['domain'] in self.engine.factors['domain']:
+                    sent_factors['domain'] = self.engine.factors['domain'][body['domain']]
                 else:
-                    sent_factors['domain'] = self.engine.factors['domain']['factors'][0]
-            translations = self.engine.translate(sentences, sent_factors)
+                    sent_factors['domain'] = self.defaults['domain']
+
+            translations, _, _, _ = self.engine.translate(sentences, sent_factors)
             if delimiters:
                 translations = ''.join(itertools.chain.from_iterable(zip(delimiters, translations))) + delimiters[-1]
 
@@ -122,17 +94,8 @@ class TranslationWorker(Worker):
 
 
 if __name__ == "__main__":
-    mq_parameters = settings.MQ_PARAMS
-    worker = TranslationWorker(nmt_model=settings.NMT_MODEL,
-                               spm_prefix=settings.SPM_MODEL_PREFIX,
-                               dict_path=settings.DICTIONARY_PATH,
-                               cpu=settings.CPU,
-                               factors=settings.FACTORS,
-                               max_sentences=settings.MAX_SENTS,
-                               max_tokens=settings.MAX_TOKENS,
-                               beam_size=settings.BEAM,
-                               lid_model=settings.LID_MODEL)
-    worker.start(connection_parameters=mq_parameters,
+    worker = TranslationWorker(**settings.WORKER_PARAMETERS)
+    worker.start(connection_parameters=settings.MQ_PARAMETERS,
                  service_name=settings.SERVICE_NAME,
-                 routing_key=settings.ROUTING_KEY,
-                 alt_routes=settings.MQ_ALT_ROUTES)
+                 routing_key=settings.ROUTES[0],
+                 alt_routes=settings.ROUTES[1:])

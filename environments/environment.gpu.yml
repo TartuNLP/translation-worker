@@ -1,23 +1,23 @@
 channels:
   - anaconda
   - conda-forge
+  - nvidia
   - defaults
-  - pytorch
 dependencies:
   - python=3.7.5
   - nltk==3.4.5
   - python-dotenv==0.15.0
   - marshmallow==3.10.0
-  - pytorch==1.8.1
+  - sentencepiece==0.1.95
   - pyyaml>=5.1
   - numpy>1.19.2
   - portalocker==1.6.0
   - sacrebleu==1.4.14
   - regex==2020.10.15
-  - git
+  - cudatoolkit==11.0.221
+  - cudnn==8.0.4
+  - nccl==2.7.8.1
   - pip
   - pip:
-      - git+https://github.com/pytorch/fairseq.git@d6855baec88f99ac776962027b91d404fe917eea
-      - sentencepiece
-      - nauron==1.2
-      - fasttext==0.9.2
+      - mxnet-cu112==1.8.0.post0
+      - nauron==1.2.2

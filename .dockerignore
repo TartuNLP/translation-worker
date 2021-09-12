@@ -4,3 +4,5 @@ config/*.env
 __pycache__/
 .git/
 .gitignore
+/logs/*
+.github
