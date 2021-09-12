@@ -25,7 +25,7 @@ with open(_args.config.name, 'r', encoding='utf-8') as f:
 SERVICE_NAME = _config['service']
 WORKER_PARAMETERS = _config['workers'][_args.worker]['parameters']
 
-if _config['workers'][_args.worker]:
+if _config['workers'][_args.worker]['routes']:
     ROUTES = [f'{_config["workers"][_args.worker]["workspace"]}.{route}' for route in
               _config["workers"][_args.worker]['routes']]
 else:
