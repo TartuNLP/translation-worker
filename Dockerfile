@@ -12,7 +12,13 @@ RUN pip install sockeye==1.18.106 --no-deps
 SHELL ["/bin/bash", "-c"]
 
 WORKDIR /app
-COPY . .
+RUN adduser --disabled-password --gecos "app" app && \
+    chown -R app:app /app && \
+    chown -R app:app /opt/conda/envs/nmt
+
+USER app
+
+COPY --chown=app:app . .
 
 ENV WORKER_NAME=""
 RUN echo "python nmt_worker.py --worker \$WORKER_NAME" > entrypoint.sh
