@@ -2,7 +2,6 @@ FROM continuumio/miniconda3
 RUN apt-get update && apt-get install -y build-essential
 
 ENV PYTHONIOENCODING=utf-8
-ENV WORKER_NAME=""
 VOLUME /app/models
 
 COPY environments/environment.yml .
@@ -15,6 +14,7 @@ SHELL ["/bin/bash", "-c"]
 WORKDIR /app
 COPY . .
 
+ENV WORKER_NAME=""
 RUN echo "python nmt_worker.py --worker \$WORKER_NAME" > entrypoint.sh
 
 ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "nmt", "bash", "entrypoint.sh"]
