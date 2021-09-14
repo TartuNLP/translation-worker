@@ -12,7 +12,6 @@ dependencies:
   - pyyaml>=5.1
   - numpy>1.19.2
   - portalocker==1.6.0
-  - sacrebleu==1.4.14
   - regex==2020.10.15
   - cudatoolkit==11.0.221
   - cudnn==8.0.4
