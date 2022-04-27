@@ -14,8 +14,8 @@ the [modularNMT](https://huggingface.co/models?other=modularNMT&pipeline_tag=tra
 models and compatible code versions can be found from the
 [releases](https://github.com/TartuNLP/translation-worker/releases) section.
 
-The default config for running these models is specified in the included `config/config.yaml`. This corresponds to the
-following `models/` folder structure:
+The default config for running these models is specified in the included `config/config.yaml`. For example, the first 
+model configuration corresponds to the following `models/` folder structure:
 
 ```
 models/
@@ -28,14 +28,13 @@ models/
     ├── dict.lt.txt
     ├── dict.lv.txt
     ├── dict.ru.txt
-    ├── spm
-    ├── sp_model.de.model
-    ├── sp_model.en.model
-    ├── sp_model.et.model
-    ├── sp_model.fi.model
-    ├── sp_model.lt.model
-    ├── sp_model.lv.model
-    └── sp_model.ru.model
+    ├── sp-model.de.model
+    ├── sp-model.en.model
+    ├── sp-model.et.model
+    ├── sp-model.fi.model
+    ├── sp-model.lt.model
+    ├── sp-model.lv.model
+    └── sp-model.ru.model
 ```
 
 ### Docker setup
@@ -128,7 +127,7 @@ instructions [here](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/i
 - Clone this repository
 - Create and activate a Conda environment with all dependencies:
 
-```
+``` bash
 conda env create -f environments/environment.yml -n nmt
 conda activate nmt
 python -c "import nltk; nltk.download(\"punkt\"); nltk.download(\"cmudict\")"
