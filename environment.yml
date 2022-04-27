@@ -1,0 +1,19 @@
+channels:
+  - pytorch
+  - anaconda
+  - conda-forge
+dependencies:
+  - python==3.9.7
+  - nltk==3.6.7
+  - pytorch==1.10.0
+  - torchvision
+  - torchaudio
+  - pyyaml==6.0
+  - pika==1.2.0
+  - pydantic==1.9.0
+  - python-dotenv==0.20.0
+  - git
+  - pip
+  - pip:
+      - git+https://github.com/TartuNLP/fairseq.git@mtee-0.1.0
+      - sentencepiece==0.1.96

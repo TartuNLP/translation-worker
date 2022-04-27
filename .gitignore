@@ -2,3 +2,5 @@ config/.env
 .idea/
 __pycache__/
 truecaser/
+config/config.*.yaml
+*.iml

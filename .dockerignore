@@ -1,9 +1,10 @@
 /models
-config/*.env
 .idea/
 __pycache__/
 .git/
 .gitignore
 truecaser/
-/logs/*
 .github
+*.env
+config/config.*.yaml
+*.iml
