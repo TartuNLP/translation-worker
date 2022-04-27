@@ -9,7 +9,7 @@ models:
         language_pairs:
           # A list of supported language pairs that the worker will handle
           [
-            "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est",  # comment this line out, if also using the mtee_general model
+            "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est",  # comment this line out, if also using the mtee_general model to handle these language pairs
             "est-lit", "est-lav", "est-fin", "est-est",
             "eng-lit", "eng-lav", "eng-fin", "eng-rus", "eng-ger", "eng-eng",
             "ger-lit", "ger-lav", "ger-fin", "ger-rus", "ger-ger", "ger-eng",
