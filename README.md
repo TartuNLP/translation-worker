@@ -4,7 +4,7 @@ This repository contains TartuNLP's modular multilingual machine translation mod
 requests from RabbitMQ. This application is based on a [custom version of FairSeq](https://github.com/TartuNLP/fairseq).
 The workers are compatible with our [translation API](https://github.com/TartuNLP/translation-api).
 
-The project is developed by the [NLP research group](https://tartunlp.ai) at the [Universty of Tartu](https://ut.ee).
+The project is developed by the [NLP research group](https://tartunlp.ai) at the [University of Tartu](https://ut.ee).
 Neural machine translation can also be tested in our [web demo](https://translate.ut.ee/).
 
 ### Configuration and model files
@@ -137,7 +137,7 @@ python -c "import nltk; nltk.download(\"punkt\"); nltk.download(\"cmudict\")"
   the [HuggingFace](https://huggingface.co/models?other=modularNMT&pipeline_tag=translation&sort=downloads) and place
   inside the `models/` directory
 - Check the configuration files and change any defaults as needed. Make sure that the paths in
-  `config/config.yaml` points to the model filse you just downloaded.
+  `config/config.yaml` points to the model files you just downloaded.
 - Specify RabbitMQ connection parameters with environment variables or in a `config/.env` file as illustrated in the
   `config/sample.env`.
 
@@ -152,7 +152,7 @@ python main.py --model-name $MODEL_NAME [--log-config config/logging.ini --model
 When running the model on a GPU, the exact RAM usage depends on the model and should always be tested, but a
 conservative estimate is to have **8 GB of memory** available.
 
-The CPU performance depends on the available CPU resources, however, this should be finetuned for the deployment
+The CPU performance depends on the available CPU resources, however, this should be fine-tuned for the deployment
 infrastructure. By default, PyTorch will try to utilize all CPU cores to 100% and run as many threads as there are
 cores. This can cause major computational overhead if the worker is deployed on large nodes. The **number of threads
 used should be limited** using the `MKL_NUM_THREADS` environment variable or the `docker run` flag `--cpuset-cpus`.
@@ -165,6 +165,6 @@ utilizing only 1/8 of each core's computational potential. This amplifies the ef
 result in inference speeds up to 20x slower than expected.
 
 Although the optimal number of threads depends on the exact model and infrastructure used, a good starting point is
-around `16` (the default in the included docker image). With optimal configuration and modern hardware, the worker s
-hould be able to process ~7 sentences per second. For more information, please refer to
+around `16` (the default in the included docker image). With optimal configuration and modern hardware, the worker 
+should be able to process ~7 sentences per second. For more information, please refer to
 [PyTorch documentation](https://pytorch.org/docs/stable/notes/cpu_threading_torchscript_inference.html).

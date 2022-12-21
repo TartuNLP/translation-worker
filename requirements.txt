@@ -8,3 +8,4 @@ git+https://github.com/TartuNLP/fairseq.git@mtee-0.1.0
 sentencepiece==0.1.96
 pydantic==1.8.2
 python-dotenv
+numpy<1.24.0
