@@ -1,4 +1,4 @@
-nltk==3.6.5
+nltk==3.6.6
 torch==1.10.0
 torchvision
 torchaudio
