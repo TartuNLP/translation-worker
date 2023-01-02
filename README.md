@@ -111,7 +111,7 @@ services:
       - MQ_USERNAME=${RABBITMQ_USER}
       - MQ_PASSWORD=${RABBITMQ_PASS}
     ports:
-      - '80:80'
+      - '80:8000'
     depends_on:
       - rabbitmq
   nmt_worker:
