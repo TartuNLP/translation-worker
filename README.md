@@ -1,8 +1,9 @@
 # TartuNLP translation worker
 
-This repository contains TartuNLP's modular multilingual machine translation models and workers to run them and process
-requests from RabbitMQ. This application is based on a [custom version of FairSeq](https://github.com/TartuNLP/fairseq).
-The workers are compatible with our [translation API](https://github.com/TartuNLP/translation-api).
+This repository contains TartuNLP's modular multilingual machine translation models. The models can be run locally to
+translate plain text files or as worker that process requests from RabbitMQ. This application is based on
+a [custom version of FairSeq](https://github.com/TartuNLP/fairseq). The workers are compatible with
+our [translation API](https://github.com/TartuNLP/translation-api).
 
 The project is developed by the [NLP research group](https://tartunlp.ai) at the [University of Tartu](https://ut.ee).
 Neural machine translation can also be tested in our [web demo](https://translate.ut.ee/).
@@ -14,7 +15,7 @@ the [modularNMT](https://huggingface.co/models?other=modularNMT&pipeline_tag=tra
 models and compatible code versions can be found from the
 [releases](https://github.com/TartuNLP/translation-worker/releases) section.
 
-The default config for running these models is specified in the included `config/config.yaml`. For example, the first 
+The default config for running these models is specified in the included `config/config.yaml`. For example, the first
 model configuration corresponds to the following `models/` folder structure:
 
 ```
@@ -65,19 +66,31 @@ By default, the container entrypoint is `main.py` without additional arguments, 
 `COMMAND` option. The only required flag is `--model-name` to select which model is loaded by the worker. The full list
 of supported flags can be seen by running `python main.py -h`:
 
-```
-usage: main.py [-h] [--model-config MODEL_CONFIG] [--model-name MODEL_NAME] [--log-config LOG_CONFIG]
+```commandline
+usage: main.py [-h] --model-name MODEL_NAME [--model-config MODEL_CONFIG] [--log-config LOG_CONFIG] [--input-file INPUT_FILE] [--output-file OUTPUT_FILE] [--input-lang INPUT_LANG] [--output-lang OUTPUT_LANG]
 
-A neural machine translation worker that processes incoming translation requests via RabbitMQ.
+A neural machine translation engine. This application supports two modes of operation: 
+    a) a worker that processes incoming translation requests via RabbitMQ;
+    b) translation of a text file into a new file;
 
 optional arguments:
   -h, --help            show this help message and exit
-  --model-config MODEL_CONFIG
-                        The model config YAML file to load.
   --model-name MODEL_NAME
-                        The model to load. Refers to the model name in the config file.
+                        The model to load. Refers to the model name in the config file. (default: None)
+  --model-config MODEL_CONFIG
+                        The model config YAML file to load. (default: config/config.yaml)
   --log-config LOG_CONFIG
-                        Path to log config file.
+                        Path to log config file. (default: config/logging.prod.ini)
+
+Local file translation arguments, if the following arguments exist, local file translation is started. Otherwise a RabbitMQ worker is started:
+  --input-file INPUT_FILE
+                        Path to the input text file. (default: None)
+  --output-file OUTPUT_FILE
+                        Path to the output text file. (default: None)
+  --input-lang INPUT_LANG
+                        Input language code (default: None)
+  --output-lang OUTPUT_LANG
+                        Output language code. (default: None)
 ```
 
 The setup can be tested with the following sample `docker-compose.yml` configuration:
@@ -118,21 +131,28 @@ services:
 
 ### Manual setup
 
-The following steps have been tested on Ubuntu. The code is both CPU and GPU compatible (CUDA is required,
-instructions [here](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html)).
-
-- Make sure you have the following prerequisites installed:
-    - Conda (see https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
-    - GNU Compiler Collection (`sudo apt install build-essential`)
+The following steps have been tested on Ubuntu. The code is both CPU and GPU compatible (CUDA is required).
 
 - Clone this repository
-- Create and activate a Conda environment with all dependencies:
+- Install prerequisites:
+    - GNU Compiler Collection (`sudo apt install build-essential`)
+    - For a **CPU** installation we recommend using the included `requirements.txt` file in a clean environment (tested
+      with Python 3.10)
+      ```commandline
+      pip install -r requirements.txt
+      ```
 
-``` bash
-conda env create -f environments/environment.yml -n nmt
-conda activate nmt
-python -c "import nltk; nltk.download(\"punkt\"); nltk.download(\"cmudict\")"
-```
+    - For a **GPU** installation, use the `environment.yml` file instead.
+        - Make sure you have the following prerequisites installed:
+            - CUDA (see https://developer.nvidia.com/cuda-downloads)
+            - Conda (see https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
+
+        - Then create and activate a Conda environment with all dependencies:
+          ```commandline
+          conda env create -f environment.yml -n nmt
+          conda activate nmt
+          python -c "import nltk; nltk.download(\"punkt\")"
+          ```
 
 - Download the models from
   the [HuggingFace](https://huggingface.co/models?other=modularNMT&pipeline_tag=translation&sort=downloads) and place
@@ -144,8 +164,14 @@ python -c "import nltk; nltk.download(\"punkt\"); nltk.download(\"cmudict\")"
 
 Run the worker with the following command where `$MODEL_NAME` matches the worker name in your config file:
 
-```
+```commandline
 python main.py --model-name $MODEL_NAME [--log-config config/logging.ini --model-config config/config.yaml]
+```
+
+Or run local file translation with the following command:
+
+```commandline
+python main.py --model-name $MODEL_NAME --input-file input.txt --output-file output.txt --input-lang est --output-lang eng [--log-config config/logging.ini --model-config config/config.yaml]
 ```
 
 ### Performance and Hardware Requirements
@@ -166,6 +192,6 @@ utilizing only 1/8 of each core's computational potential. This amplifies the ef
 result in inference speeds up to 20x slower than expected.
 
 Although the optimal number of threads depends on the exact model and infrastructure used, a good starting point is
-around `16` (the default in the included docker image). With optimal configuration and modern hardware, the worker 
+around `16` (the default in the included docker image). With optimal configuration and modern hardware, the worker
 should be able to process ~7 sentences per second. For more information, please refer to
 [PyTorch documentation](https://pytorch.org/docs/stable/notes/cpu_threading_torchscript_inference.html).
