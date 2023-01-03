@@ -9,25 +9,18 @@ from sockeye.translate import inference
 
 from truecaser import applytc
 
-logger = logging.getLogger("nmt")
+logger = logging.getLogger(__name__)
 
 
-class Translator:
+class SockeyeModel:
     nmt_model = None
     spm_model = spm.SentencePieceProcessor()
     tc_model = None
     factor_sequence = None
-    factors = None
 
-    def __init__(self, nmt_model: str, spm_model: str, tc_model: str, factor_sequence: list, factors: dict):
+    def __init__(self, nmt_model_path: str, spm_model: str, tc_model: str, factor_sequence: list):
         self.factor_sequence = factor_sequence
-        self.factors = {}
-        for factor, mapping in factors.items():
-            self.factors[factor] = {}
-            for k, v in mapping.items():
-                self.factors[factor][k] = v
-                self.factors[factor][v] = v
-        self._load_models(nmt_model, spm_model, tc_model)
+        self._load_models(nmt_model_path, spm_model, tc_model)
 
     def _load_models(self, nmt_model: str, spm_model: str, tc_model: str):
         """Load translation and segmentation models."""

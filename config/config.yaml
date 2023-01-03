@@ -1,33 +1,45 @@
-service: translation
-workers:
+models:
   septilang:
-    # Should match the workspace name parameter in the API config
-    workspace: default
-    # List of all routing keys for this worker, as specified by the routing key of the workspace, separated by dots.
-    # When routing uses language keys, all variants of 2-letter (if available) and 3-letter codes should be specified
-    # e.g. [ est.ger, est.deu, et.de ]
-    routes: [ ]
-    # Parameters required by the TranslationWorker
-    parameters:
-      nmt_model: models/septilang/nmt
-      spm_model: models/septilang/spm/sp32.model
-      tc_model: models/septilang/tc/joint-truecase.tc
-      char_limit: 1000
-      factor_sequence: [ lang, domain, f, g ]
-      factors:
-        lang: { est: et, lav: lv, eng: en, deu: de, ger: de, lit: lt, rus: ru, fin: fi }
-        domain: { auto: pc, fml: ep, inf: os }
-      defaults:
-        domain: pc
+    nmt_model_path: models/septilang/nmt
+    spm_model: models/septilang/spm/sp32.model
+    tc_model: models/septilang/tc/joint-truecase.tc
+    domains:
+      - name: general
+        language_pairs: [ "eng-eng", "est-eng", "ger-eng", "lit-eng", "lav-eng", "fin-eng", "rus-eng",
+                          "eng-est", "est-est", "ger-est", "lit-est", "lav-est", "fin-est", "rus-est",
+                          "eng-ger", "est-ger", "ger-ger", "lit-ger", "lav-ger", "fin-ger", "rus-ger",
+                          "eng-lit", "est-lit", "ger-lit", "lit-lit", "lav-lit", "fin-lit", "rus-lit",
+                          "eng-lav", "est-lav", "ger-lav", "lit-lav", "lav-lav", "fin-lav", "rus-lav",
+                          "eng-rus", "est-rus", "ger-rus", "lit-rus", "lav-rus", "fin-fin", "fin-rus",
+                          "eng-fin", "est-fin", "ger-fin", "lit-fin", "lav-fin", "rus-fin", "rus-rus" ]
+      - name: formal
+        language_pairs: [ "eng-eng", "est-eng", "ger-eng", "lit-eng", "lav-eng", "fin-eng", "rus-eng",
+                          "eng-est", "est-est", "ger-est", "lit-est", "lav-est", "fin-est", "rus-est",
+                          "eng-ger", "est-ger", "ger-ger", "lit-ger", "lav-ger", "fin-ger", "rus-ger",
+                          "eng-lit", "est-lit", "ger-lit", "lit-lit", "lav-lit", "fin-lit", "rus-lit",
+                          "eng-lav", "est-lav", "ger-lav", "lit-lav", "lav-lav", "fin-lav", "rus-lav",
+                          "eng-rus", "est-rus", "ger-rus", "lit-rus", "lav-rus", "fin-fin", "fin-rus",
+                          "eng-fin", "est-fin", "ger-fin", "lit-fin", "lav-fin", "rus-fin", "rus-rus" ]
+      - name: informal
+        language_pairs: [ "eng-eng", "est-eng", "ger-eng", "lit-eng", "lav-eng", "fin-eng", "rus-eng",
+                          "eng-est", "est-est", "ger-est", "lit-est", "lav-est", "fin-est", "rus-est",
+                          "eng-ger", "est-ger", "ger-ger", "lit-ger", "lav-ger", "fin-ger", "rus-ger",
+                          "eng-lit", "est-lit", "ger-lit", "lit-lit", "lav-lit", "fin-lit", "rus-lit",
+                          "eng-lav", "est-lav", "ger-lav", "lit-lav", "lav-lav", "fin-lav", "rus-lav",
+                          "eng-rus", "est-rus", "ger-rus", "lit-rus", "lav-rus", "fin-fin", "fin-rus",
+                          "eng-fin", "est-fin", "ger-fin", "lit-fin", "lav-fin", "rus-fin", "rus-rus" ]
+    factor_sequence: [ lang, domain, f, g ]
+    language_codes: { est: et, lav: lv, eng: en, ger: de, lit: lt, rus: ru, fin: fi }
+    domain_codes: { general: pc, fml: ep, inf: os }
   smugri:
-    workspace: smugri
-    routes: [ ]
-    parameters:
-      nmt_model: models/smugri/smugri-january-2021
-      spm_model: models/smugri/spm/spm.model
-      tc_model: 
-      char_limit: 1000
-      factor_sequence: [ lang ]
-      factors:
-        lang: { est: et, fin: fi, sma: sma, sme: sme, vro: vro }
-      defaults: {}
+    nmt_model_path: models/smugri/smugri-january-2021
+    spm_model: models/smugri/spm/spm.model
+    tc_model:
+    domains:
+      - name: general
+        language_pairs: [ "sma-est", "sma-fin", "sma-sma", "sma-sme", "sma-vro", "est-sma", "fin-sma",
+                          "sme-est", "sme-fin", "sme-sma", "sme-sme", "sme-vro", "est-sme", "fin-sme",
+                          "vro-est", "vro-fin", "vro-sma", "vro-sme", "vro-vro", "est-vro", "fin-vro" ]
+    factor_sequence: [ lang ]
+    language_codes: { est: et, fin: fi, sma: sma, sme: sme, vro: vro }
+    domain_codes: { general: auto }

@@ -4,19 +4,20 @@ channels:
   - nvidia
   - defaults
 dependencies:
-  - python=3.7.5
-  - nltk==3.4.5
-  - python-dotenv==0.15.0
-  - marshmallow==3.10.0
-  - sentencepiece==0.1.95
-  - pyyaml>=5.1
-  - numpy>1.19.2
-  - portalocker==1.6.0
-  - regex==2020.10.15
+  - python<3.9
   - cudatoolkit==11.0.221
   - cudnn==8.0.4
   - nccl==2.7.8.1
+  - sentencepiece==0.1.95
+  - numpy==1.19.2
+  - portalocker==2.3.0
+  - nltk==3.7
+  - pika==1.3.1
+  - pydantic==1.9.0
+  - python-dotenv==0.21.0
+  - pyyaml==6.0
+  - regex
   - pip
   - pip:
       - mxnet-cu112==1.8.0.post0
-      - nauron==1.2.2
+      #sockeye==1.18.106 --no-deps
