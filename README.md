@@ -1,8 +1,8 @@
 # TartuNLP translation worker
 
-This repository contains TartuNLP's modular multilingual machine translation models. The models can be run locally to
-translate plain text files or as worker that process requests from RabbitMQ. This application is based on
-a [custom version of FairSeq](https://github.com/TartuNLP/fairseq). The workers are compatible with
+This repository contains code for running TartuNLP's modular multilingual machine translation models. This application
+is based on a [custom version of FairSeq](https://github.com/TartuNLP/fairseq).The models can be run locally to 
+translate plain text files or as worker that process requests from RabbitMQ. The workers are compatible with
 our [translation API](https://github.com/TartuNLP/translation-api).
 
 The project is developed by the [NLP research group](https://tartunlp.ai) at the [University of Tartu](https://ut.ee).
