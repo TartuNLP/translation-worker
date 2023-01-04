@@ -4,7 +4,7 @@ from nmt_worker import Translator, read_model_config
 from nmt_worker.schemas import Response, Request
 
 
-class TestTranslation(unittest.TestCase):
+class Septilang(unittest.TestCase):
     translator: Translator
     config = 'config/config.yaml'
     model = 'septilang'
