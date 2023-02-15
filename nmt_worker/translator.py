@@ -10,7 +10,8 @@ from .schemas import Response, Request
 from .tag_utils import preprocess_tags, postprocess_tags
 from .normalization import normalize
 from .tokenization import sentence_tokenize
-from .modular_interface import ModularHubInterface
+from .universal_interface import UniversalHubInterface
+from fairseq import hub_utils
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +28,17 @@ class Translator:
         logger.info("All models loaded")
 
     def _load_model(self):
-        sentencepiece_path = os.path.join(self.model_config.sentencepiece_dir, self.model_config.sentencepiece_prefix)
-        self.model = ModularHubInterface.from_pretrained(
-            model_path=self.model_config.checkpoint_path,
-            sentencepiece_prefix=sentencepiece_path,
-            dictionary_path=self.model_config.dict_dir)
+        x = hub_utils.from_pretrained(
+            model_name_or_path=self.model_config.checkpoint_path,
+            checkpoint_file=self.model_config.checkpoint_file,
+            data_name_or_path=self.model_config.dict_dir,
+            bpe='sentencepiece',
+            sentencepiece_model=self.model_config.sentencepiece_path,
+            fixed_dictionary=self.model_config.dict_path
+        )
+        logger.info(x["args"])
+        self.model = UniversalHubInterface(x["args"], x["task"], x["models"])
+
         if torch.cuda.is_available():
             self.model.cuda()
 
@@ -53,7 +60,7 @@ class Translator:
             detagged, tags = preprocess_tags(sentences, request.input_type)
             normalized = [normalize(sentence) for sentence in detagged]
             translated = [translation if normalized[idx] != '' else '' for idx, translation in enumerate(
-                self.model.translate(normalized, src_language=request.src, tgt_language=request.tgt))]
+                self.model.translate(normalized, keep_inference_langtok=False, langtoks={'main': ('src', 'tgt')}, source_lang=request.src, target_lang=request.tgt))]
             retagged = postprocess_tags(translated, tags, request.input_type)
             translations.append(''.join(itertools.chain.from_iterable(zip(delimiters, retagged))) + delimiters[-1])
 

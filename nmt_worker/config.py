@@ -1,6 +1,7 @@
+import fairseq.tasks
 import yaml
 from yaml.loader import SafeLoader
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from pydantic import BaseSettings, BaseModel
 
@@ -30,11 +31,14 @@ class Domain(BaseModel):
 class ModelConfig(BaseModel):
     model_name: str
     checkpoint_path: str
-    dict_dir: str
-    sentencepiece_dir: str
-    sentencepiece_prefix: str
+    checkpoint_file: str
     domains: List[Domain]
     language_codes: Dict[str, str]
+    dict_dir: Optional[str] = None
+    dict_path: Optional[str] = None
+    sentencepiece_dir: Optional[str] = None
+    sentencepiece_prefix: Optional[str] = None
+    sentencepiece_path: Optional[str] = None
 
 
 def read_model_config(file_path: str, model_name: str) -> ModelConfig:
