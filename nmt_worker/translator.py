@@ -56,6 +56,7 @@ class Translator:
         translations = []
 
         for text in inputs:
+            logger.debug(f"Input: {text}")
             sentences, delimiters = sentence_tokenize(text)
             detagged, tags = preprocess_tags(sentences, request.input_type)
             normalized = [normalize(sentence) for sentence in detagged]
@@ -63,6 +64,7 @@ class Translator:
                 self.model.translate(normalized, keep_inference_langtok=False, langtoks={'main': ('src', 'tgt')}, source_lang=request.src, target_lang=request.tgt))]
             retagged = postprocess_tags(translated, tags, request.input_type)
             translations.append(''.join(itertools.chain.from_iterable(zip(delimiters, retagged))) + delimiters[-1])
+            logger.debug(f"Output: {translations[-1]}")
 
         response = Response(result=translations[0] if type(request.text) == str else translations)
 
