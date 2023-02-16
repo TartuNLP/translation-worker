@@ -34,7 +34,7 @@ class UniversalHubInterface(GeneratorHubInterface):
             )[0]
 
         # build generator using current args as well as any kwargs
-        gen_args = copy.deepcopy(self.cfg.generation)
+        gen_args = self.cfg.generation
         with open_dict(gen_args):
             gen_args.beam = beam
             for k, v in kwargs.items():
