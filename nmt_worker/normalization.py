@@ -33,8 +33,14 @@ REGEXES = (
     (re.compile(r' +'), r' ')
 )
 
-
 def normalize(sentence: str):
     for regex, sub in REGEXES:
         sentence = regex.sub(sub, sentence)
+    return sentence
+
+def postprocess_writing_system(sentence: str, language: str):
+    if language == "lud":
+        replacements = {'y': 'ü', 'Y': 'Ü'}
+        for old_char, new_cahr in replacements.items():
+            sentence = sentence.replace(old_char, new_cahr)
     return sentence
