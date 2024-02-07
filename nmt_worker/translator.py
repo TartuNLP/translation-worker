@@ -8,7 +8,7 @@ import torch
 from .config import ModelConfig
 from .schemas import Response, Request
 from .tag_utils import preprocess_tags, postprocess_tags
-from .normalization import normalize
+from .normalization import normalize, postprocess_writing_system
 from .tokenization import sentence_tokenize
 from .universal_interface import UniversalHubInterface
 from fairseq import hub_utils
@@ -62,6 +62,7 @@ class Translator:
             normalized = [normalize(sentence) for sentence in detagged]
             translated = [translation if normalized[idx] != '' else '' for idx, translation in enumerate(
                 self.model.translate(normalized, keep_inference_langtok=False, langtoks={'main': ('src', 'tgt')}, source_lang=request.src, target_lang=request.tgt))]
+            translated = [postprocess_writing_system(sentence, request.tgt) for sentence in translated]
             retagged = postprocess_tags(translated, tags, request.input_type)
             translations.append(''.join(itertools.chain.from_iterable(zip(delimiters, retagged))) + delimiters[-1])
             logger.debug(f"Output: {translations[-1]}")
