@@ -57,3 +57,34 @@ models:
       - name: crisis
         language_pairs: [ "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est" ]
     language_codes: { est: et, ger: de, eng: en, rus: ru }
+
+  nllb_based_from_est:
+    checkpoint_path: models/nllb-based/nllb_based_from_est.pt
+    dict_dir: models/nllb-based/dicts/from-est/
+    sentencepiece_dir: models/nllb-based/spm/from-est/
+    sentencepiece_prefix: sp-model
+    domains:
+      - name: general
+        language_pairs:
+          [ "est-rus", "est-ger", "est-eng", "est-fin", "est-ukr", "est-chi" ]
+    language_codes: {
+      est: est_Latn,
+      ger: deu_Latn, eng: eng_Latn, fin: fin_Latn,
+      rus: rus_Cyrl, ukr: ukr_Cyrl, chi: zho_Hans
+    }
+
+  nllb_based_into_est:
+    checkpoint_path: models/nllb-based/nllb_based_into_est.pt
+    dict_dir: models/nllb-based/dicts/into-est/
+    sentencepiece_dir: models/nllb-based/spm/into-est/
+    sentencepiece_prefix: sp-model
+    domains:
+      - name: general
+        language_pairs:
+          [ "rus-est", "ger-est", "eng-est", "fin-est", "ukr-est", "chi-est",
+            "ara-est", "spa-est", "fre-est", "lit-est", "lav-est", "swe-est" ]
+    language_codes: {
+      est: est_Latn,
+      ara: arb_Arab, ger: deu_Latn, eng: eng_Latn, spa: spa_Latn, fin: fin_Latn, fre: fra_Latn,
+      lit: lit_Latn, lav: lvs_Latn, rus: rus_Cyrl, swe: swe_Latn, ukr: ukr_Cyrl, chi: zho_Hans
+    }
