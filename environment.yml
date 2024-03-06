@@ -15,5 +15,5 @@ dependencies:
   - git
   - pip
   - pip:
-      - git+https://github.com/TartuNLP/fairseq.git@mtee-0.1.0
+      - git+https://github.com/TartuNLP/fairseq.git@0535b7f358800baa61050d902ffc1d4469e68113
       - sentencepiece==0.1.96

@@ -4,7 +4,7 @@ torchvision==0.14.1
 torchaudio==0.13.1
 pyyaml==6.0
 pika==1.3.1
-git+https://github.com/TartuNLP/fairseq.git@mtee-0.1.0
+git+https://github.com/TartuNLP/fairseq.git@0535b7f358800baa61050d902ffc1d4469e68113
 sentencepiece==0.1.97
 pydantic==1.10.4
 python-dotenv
