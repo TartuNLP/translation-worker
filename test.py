@@ -4,17 +4,17 @@ from nmt_worker import Translator, read_model_config
 from nmt_worker.schemas import Response, Request
 
 
-class Septilang(unittest.TestCase):
+class NLLBBased(unittest.TestCase):
     translator: Translator
     config = 'config/config.yaml'
-    model = 'septilang'
+    model = 'nllb_based_from_est'
 
     @classmethod
     def setUpClass(cls):
         model_config = read_model_config(cls.config, cls.model)
         cls.translator = Translator(model_config)
 
-    def test_text_translation(self):
+    def test_text_translation_est_eng(self):
         """
         Check that a response object is returned upon text translation request.
         """
@@ -25,7 +25,18 @@ class Septilang(unittest.TestCase):
         self.assertIsInstance(response, Response)
         self.assertIsInstance(response.result, str)
 
-    def test_list_translation(self):
+    def test_text_translation_est_ger(self):
+        """
+        Check that a response object is returned upon text translation request.
+        """
+        request = Request(text="Tere! Teretulemast!",
+                          src="est",
+                          tgt="ger")
+        response = self.translator.process_request(request)
+        self.assertIsInstance(response, Response)
+        self.assertIsInstance(response.result, str)
+
+    def test_list_translation_est_eng(self):
         """
         Check that lists are translated appropriately.
         """
@@ -36,6 +47,28 @@ class Septilang(unittest.TestCase):
         self.assertIsInstance(response, Response)
         self.assertIsInstance(response.result, list)
         self.assertEqual(len(response.result), len(request.text))
+
+    def test_text_translation_est_rus(self):
+        """
+        Check that a response object is returned upon text translation request.
+        """
+        request = Request(text="Tere! Teretulemast!",
+                          src="est",
+                          tgt="rus")
+        response = self.translator.process_request(request)
+        self.assertIsInstance(response, Response)
+        self.assertIsInstance(response.result, str)
+
+    def test_text_translation_est_ukr(self):
+        """
+        Check that a response object is returned upon text translation request.
+        """
+        request = Request(text="Tere! Teretulemast!",
+                          src="est",
+                          tgt="ukr")
+        response = self.translator.process_request(request)
+        self.assertIsInstance(response, Response)
+        self.assertIsInstance(response.result, str)
 
 
 if __name__ == '__main__':
