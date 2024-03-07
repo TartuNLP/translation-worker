@@ -35,6 +35,7 @@ class ModelConfig(BaseModel):
     sentencepiece_prefix: str
     domains: List[Domain]
     language_codes: Dict[str, str]
+    internal_language_codes: Dict[str, str]
 
 
 def read_model_config(file_path: str, model_name: str) -> ModelConfig:
