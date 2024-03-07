@@ -106,14 +106,16 @@ class ModularHubInterface(Module):
             sentences: List[str],
             src_language: str,
             tgt_language: str,
+            true_src_language: str,
             beam: int = 5,
             max_sentences: Optional[int] = 10,
             max_tokens: Optional[int] = 1000,
     ) -> List[str]:
         """
         :param sentences: list of sentences to be translated
-        :param src_language: source language
+        :param src_language: (dummy) source language
         :param tgt_language: target language
+        :param true_src_language: actual source language
         :param beam: beam size for the beam search algorithm (decoding)
         :param max_sentences: max number of sentences in each batch
         :param max_tokens: max number of tokens in each batch, all sentences must be shorter than max_tokens.
@@ -125,6 +127,7 @@ class ModularHubInterface(Module):
             tokenized_sentences,
             src_language,
             tgt_language,
+            true_src_language,
             beam=beam,
             max_sentences=max_sentences,
             max_tokens=max_tokens
@@ -136,6 +139,7 @@ class ModularHubInterface(Module):
             tokenized_sentences: List[LongTensor],
             src_lang: str,
             tgt_lang: str,
+            true_src_lang: str,
             beam: int = 5,
             max_sentences: Optional[int] = 10,
             max_tokens: Optional[int] = None,
@@ -151,6 +155,7 @@ class ModularHubInterface(Module):
                 tokenized_sentences,
                 src_lang,
                 tgt_lang,
+                true_src_lang,
                 skip_invalid_size_inputs=skip_invalid_size_inputs,
                 max_sentences=max_sentences,
                 max_tokens=max_tokens
@@ -172,6 +177,7 @@ class ModularHubInterface(Module):
             src_lengths: LongTensor,
             src_lang: str,
             tgt_lang: str,
+            true_src_lang: str
     ) -> FairseqDataset:
         return self.task.alter_dataset_langtok(
             LanguagePairDataset(
@@ -181,6 +187,7 @@ class ModularHubInterface(Module):
             src_lang=src_lang,
             tgt_eos=self.dicts[tgt_lang].eos(),
             tgt_lang=tgt_lang,
+            true_src_lang=true_src_lang
         )
 
     def _build_batches(
@@ -188,13 +195,14 @@ class ModularHubInterface(Module):
             tokens: List[LongTensor],
             src_lang: str,
             tgt_lang: str,
+            true_src_lang: str,
             skip_invalid_size_inputs: bool,
             max_sentences: Optional[int] = 10,
             max_tokens: Optional[int] = None
     ) -> Iterator[Dict[str, Any]]:
         lengths = LongTensor([t.numel() for t in tokens])
         batch_iterator = self.task.get_batch_iterator(
-            dataset=self._build_dataset_for_inference(tokens, lengths, src_lang, tgt_lang),
+            dataset=self._build_dataset_for_inference(tokens, lengths, src_lang, tgt_lang, true_src_lang),
             max_tokens=max_tokens,
             max_sentences=max_sentences,
             max_positions=self.max_positions[f"{src_lang}-{tgt_lang}"],
