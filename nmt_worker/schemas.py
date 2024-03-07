@@ -25,6 +25,7 @@ class Request(BaseModel):
     text: Union[str, list]
     src: str
     tgt: str
+    true_src: str
     domain: Optional[str] = None
     application: Optional[str] = None
     input_type: Optional[InputType] = None

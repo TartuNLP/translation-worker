@@ -55,7 +55,8 @@ def main():
         request = Request(
             text=input_text,
             src=args.input_lang,
-            tgt=args.output_lang
+            tgt=args.output_lang,
+            true_src=model_config.internal_language_codes[args.input_lang]
         )
         response = translator.process_request(request)
         args.output_file.write(response.result)
