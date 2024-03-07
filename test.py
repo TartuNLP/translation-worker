@@ -4,7 +4,7 @@ from nmt_worker import Translator, read_model_config
 from nmt_worker.schemas import Response, Request
 
 
-class NLLBBased(unittest.TestCase):
+class NLLBBasedFromEst(unittest.TestCase):
     translator: Translator
     config = 'config/config.yaml'
     model = 'nllb_based_from_est'
@@ -66,6 +66,53 @@ class NLLBBased(unittest.TestCase):
         request = Request(text="Tere! Teretulemast!",
                           src="est",
                           tgt="ukr")
+        response = self.translator.process_request(request)
+        self.assertIsInstance(response, Response)
+        self.assertIsInstance(response.result, str)
+
+
+class NLLBBasedIntoEst(unittest.TestCase):
+    translator: Translator
+    config = 'config/config.yaml'
+    model = 'nllb_based_into_est'
+
+    @classmethod
+    def setUpClass(cls):
+        model_config = read_model_config(cls.config, cls.model)
+        cls.translator = Translator(model_config)
+
+    def test_text_translation_eng_est(self):
+        """
+        Check that a response object is returned upon text translation request.
+        """
+        request = Request(text="Hello, it's nice to meet you!",
+                          src="eng",
+                          tgt="est",
+                          true_src="eng_Latn")
+        response = self.translator.process_request(request)
+        self.assertIsInstance(response, Response)
+        self.assertIsInstance(response.result, str)
+
+    def test_text_translation_rus_est(self):
+        """
+        Check that a response object is returned upon text translation request.
+        """
+        request = Request(text="На улице дождь или солнечно?",
+                          src="rus",
+                          tgt="est",
+                          true_src="rus_Cyrl")
+        response = self.translator.process_request(request)
+        self.assertIsInstance(response, Response)
+        self.assertIsInstance(response.result, str)
+
+    def test_text_translation_ger_est(self):
+        """
+        Check that a response object is returned upon text translation request.
+        """
+        request = Request(text="Ich lebe schon seit sechs Jahren hier.",
+                          src="ger",
+                          tgt="est",
+                          true_src="deu_Latn")
         response = self.translator.process_request(request)
         self.assertIsInstance(response, Response)
         self.assertIsInstance(response.result, str)
