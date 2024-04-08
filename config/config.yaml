@@ -1,63 +1,4 @@
 models:
-  septilang:  # The model name. Used by the flag --model-name to select which model will be loaded by the worker.
-    checkpoint_path: models/septilang/modular_model.pt  # The model checkpoint file path
-    dict_dir: models/septilang/  # The directory of model dictionary files
-    sentencepiece_dir: models/septilang/  # The path to all sentencepiece file directory
-    sentencepiece_prefix: sp-model  # The prefix used for sentencepiece model files
-    domains:
-      - name: general  # The domain name as used by the translation API
-        language_pairs:
-          # A list of supported language pairs that the worker will handle
-          [
-            "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est",  # comment this line out, if also using the mtee_general model to handle these language pairs
-            "est-lit", "est-lav", "est-fin", "est-est",
-            "eng-lit", "eng-lav", "eng-fin", "eng-rus", "eng-ger", "eng-eng",
-            "ger-lit", "ger-lav", "ger-fin", "ger-rus", "ger-ger", "ger-eng",
-            "rus-lit", "rus-lav", "rus-fin", "rus-rus", "rus-ger", "rus-eng",
-            "fin-lit", "fin-lav", "fin-fin", "fin-rus", "fin-ger", "fin-eng", "fin-est",
-            "lav-lit", "lav-lav", "lav-fin", "lav-rus", "lav-ger", "lav-eng", "lav-est",
-            "lit-lit", "lit-lav", "lit-fin", "lit-rus", "lit-ger", "lit-eng", "lit-est"
-          ]
-    language_codes:
-      # A mapping of the standard 3-letter codes used by translation API to language codes used by the model internally.
-      { est: et, lav: lv, eng: en, ger: de, lit: lt, rus: ru, fin: fi }
-  mtee_general:
-    checkpoint_path: models/mtee-general/modular_model.pt
-    dict_dir: models/mtee-general/dicts/
-    sentencepiece_dir: models/mtee-general/spm/
-    sentencepiece_prefix: sp-model
-    domains:
-      - name: general
-        language_pairs: [ "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est" ]
-    language_codes: { est: et, ger: de, eng: en, rus: ru }
-  mtee_legal:
-    checkpoint_path: models/mtee-legal/modular_model.pt
-    dict_dir: models/mtee-legal/dicts/
-    sentencepiece_dir: models/mtee-legal/spm/
-    sentencepiece_prefix: sp-model
-    domains:
-      - name: legal
-        language_pairs: [ "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est" ]
-    language_codes: { est: et, ger: de, eng: en, rus: ru }
-  mtee_military:
-    checkpoint_path: models/mtee-military/modular_model.pt
-    dict_dir: models/mtee-legal/dicts/
-    sentencepiece_dir: models/mtee-legal/spm/
-    sentencepiece_prefix: sp-model
-    domains:
-      - name: military
-        language_pairs: [ "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est" ]
-    language_codes: { est: et, ger: de, eng: en, rus: ru }
-  mtee_crisis:
-    checkpoint_path: models/mtee-crisis/modular_model.pt
-    dict_dir: models/mtee-legal/dicts/
-    sentencepiece_dir: models/mtee-legal/spm/
-    sentencepiece_prefix: sp-model
-    domains:
-      - name: crisis
-        language_pairs: [ "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est" ]
-    language_codes: { est: et, ger: de, eng: en, rus: ru }
-
   nllb_based_from_est:
     checkpoint_path: models/nllb-based/nllb_based_from_est.pt
     dict_dir: models/nllb-based/dicts/from-est/
@@ -77,7 +18,6 @@ models:
       ger: deu_Latn, eng: eng_Latn, fin: fin_Latn,
       rus: rus_Cyrl, ukr: ukr_Cyrl, chi: zho_Hans
     }
-
   nllb_based_into_est:
     checkpoint_path: models/nllb-based/nllb_based_into_est.pt
     dict_dir: models/nllb-based/dicts/into-est/

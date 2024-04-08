@@ -87,8 +87,7 @@ class NLLBBasedIntoEst(unittest.TestCase):
         """
         request = Request(text="Hello, it's nice to meet you!",
                           src="eng",
-                          tgt="est",
-                          true_src="eng_Latn")
+                          tgt="est")
         response = self.translator.process_request(request)
         self.assertIsInstance(response, Response)
         self.assertIsInstance(response.result, str)
@@ -99,8 +98,7 @@ class NLLBBasedIntoEst(unittest.TestCase):
         """
         request = Request(text="На улице дождь или солнечно?",
                           src="rus",
-                          tgt="est",
-                          true_src="rus_Cyrl")
+                          tgt="est")
         response = self.translator.process_request(request)
         self.assertIsInstance(response, Response)
         self.assertIsInstance(response.result, str)
@@ -111,8 +109,7 @@ class NLLBBasedIntoEst(unittest.TestCase):
         """
         request = Request(text="Ich lebe schon seit sechs Jahren hier.",
                           src="ger",
-                          tgt="est",
-                          true_src="deu_Latn")
+                          tgt="est")
         response = self.translator.process_request(request)
         self.assertIsInstance(response, Response)
         self.assertIsInstance(response.result, str)

@@ -42,7 +42,7 @@ class Translator:
                     f"src: {request.src}, "
                     f"tgt: {request.tgt}, "
                     f"domain: {request.domain}}}")
-        request.true_src = self.model_config.internal_language_codes[request.src]
+        true_src = self.model_config.internal_language_codes[request.src]
         request.src = self.model_config.language_codes[request.src]
         request.tgt = self.model_config.language_codes[request.tgt]
         inputs = [request.text] if type(request.text) == str else request.text
@@ -55,7 +55,7 @@ class Translator:
             normalized = [normalize(sentence) for sentence in detagged]
             translated = [translation if normalized[idx] != '' else '' for idx, translation in enumerate(
                 self.model.translate(normalized, src_language=request.src, tgt_language=request.tgt,
-                                     true_src_language=request.true_src)
+                                     true_src_language=true_src)
             )]
             retagged = postprocess_tags(translated, tags, request.input_type)
             translations.append(''.join(itertools.chain.from_iterable(zip(delimiters, retagged))) + delimiters[-1])
