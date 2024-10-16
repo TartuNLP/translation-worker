@@ -9,12 +9,13 @@ models:
         language_pairs:
           # A list of supported language pairs that the worker will handle
           [
-            "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est",  # comment this line out, if also using the mtee_general model to handle these language pairs
-            "est-lit", "est-lav", "est-fin", "est-est",
+            "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est",  # comment this line out, if also using mtee_general or synest_fully_modular
+            "est-fin", "fin-est" # comment this line out, if also using synest_fully_modular
+            "est-lit", "est-lav", "est-est",
             "eng-lit", "eng-lav", "eng-fin", "eng-rus", "eng-ger", "eng-eng",
             "ger-lit", "ger-lav", "ger-fin", "ger-rus", "ger-ger", "ger-eng",
             "rus-lit", "rus-lav", "rus-fin", "rus-rus", "rus-ger", "rus-eng",
-            "fin-lit", "fin-lav", "fin-fin", "fin-rus", "fin-ger", "fin-eng", "fin-est",
+            "fin-lit", "fin-lav", "fin-fin", "fin-rus", "fin-ger", "fin-eng", 
             "lav-lit", "lav-lav", "lav-fin", "lav-rus", "lav-ger", "lav-eng", "lav-est",
             "lit-lit", "lit-lav", "lit-fin", "lit-rus", "lit-ger", "lit-eng", "lit-est"
           ]
@@ -23,8 +24,8 @@ models:
       { est: et, lav: lv, eng: en, ger: de, lit: lt, rus: ru, fin: fi }
   mtee_general:
     checkpoint_path: models/mtee-general/modular_model.pt
-    dict_dir: models/mtee-general/dicts/
-    sentencepiece_dir: models/mtee-general/spm/
+    dict_dir: models/mtee-general/
+    sentencepiece_dir: models/mtee-general/
     sentencepiece_prefix: sp-model
     domains:
       - name: general
@@ -32,8 +33,8 @@ models:
     language_codes: { est: et, ger: de, eng: en, rus: ru }
   mtee_legal:
     checkpoint_path: models/mtee-legal/modular_model.pt
-    dict_dir: models/mtee-legal/dicts/
-    sentencepiece_dir: models/mtee-legal/spm/
+    dict_dir: models/mtee-legal/
+    sentencepiece_dir: models/mtee-legal/
     sentencepiece_prefix: sp-model
     domains:
       - name: legal
@@ -41,8 +42,8 @@ models:
     language_codes: { est: et, ger: de, eng: en, rus: ru }
   mtee_military:
     checkpoint_path: models/mtee-military/modular_model.pt
-    dict_dir: models/mtee-legal/dicts/
-    sentencepiece_dir: models/mtee-legal/spm/
+    dict_dir: models/mtee-military/
+    sentencepiece_dir: models/mtee-military/
     sentencepiece_prefix: sp-model
     domains:
       - name: military
@@ -50,10 +51,24 @@ models:
     language_codes: { est: et, ger: de, eng: en, rus: ru }
   mtee_crisis:
     checkpoint_path: models/mtee-crisis/modular_model.pt
-    dict_dir: models/mtee-legal/dicts/
-    sentencepiece_dir: models/mtee-legal/spm/
+    dict_dir: models/mtee-crisis/
+    sentencepiece_dir: models/mtee-crisis/
     sentencepiece_prefix: sp-model
     domains:
       - name: crisis
         language_pairs: [ "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est" ]
     language_codes: { est: et, ger: de, eng: en, rus: ru }
+  synest_fully_modular:
+    checkpoint_path: models/synest-fully-modular/modular_model.pt
+    dict_dir: models/synest-fully-modular/
+    sentencepiece_dir: models/synest-fully-modular/
+    sentencepiece_prefix: sp-model
+    domains:
+      - name: general
+        language_pairs: [ 
+          "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est", # language pairs common with mtee_general and septilang
+          "est-fin", "fin-est", # language pairs common with septilang
+          "est-ukr", "ukr-est", "rus-ukr", "ukr-rus", "eng-ukr", "ukr-eng", # new language pairs with ukrainian
+          #"eng-ger", "ger-eng", "eng-fin", "fin-eng", "eng-rus", "rus-eng" # other pairs present in training, but translation quality has not been verified
+        ]
+    language_codes: { est: et, ger: de, eng: en, rus: ru, fin: fi, ukr: uk }
