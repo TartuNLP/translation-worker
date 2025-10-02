@@ -1,7 +1,7 @@
 # TartuNLP translation worker
 
 This repository contains code for running TartuNLP's modular multilingual machine translation models. This application
-is based on a [custom version of FairSeq](https://github.com/TartuNLP/fairseq).The models can be run locally to 
+is based on [CTranslate2](https://github.com/OpenNMT/CTranslate2) for efficient inference. The models can be run locally to 
 translate plain text files or as worker that process requests from RabbitMQ. The workers are compatible with
 our [translation API](https://github.com/TartuNLP/translation-api).
 
@@ -10,32 +10,24 @@ Neural machine translation can also be tested in our [web demo](https://translat
 
 ### Configuration and model files
 
-The models can be downloaded from our [HuggingFace](https://huggingface.co/tartuNLP), compatible models are marked with
-the [modularNMT](https://huggingface.co/models?other=modularNMT&pipeline_tag=translation&sort=downloads) tag. Older
-models and compatible code versions can be found from the
+The current Smugri4 model can be downloaded from [HuggingFace](https://huggingface.co/tartuNLP/smugri4-mt).
+Older models and compatible code versions can be found from the
 [releases](https://github.com/TartuNLP/translation-worker/releases) section.
 
-The default config for running these models is specified in the included `config/config.yaml`. For example, the first
-model configuration corresponds to the following `models/` folder structure:
+The default config for running the Smugri4 model is specified in the included `config/config.yaml`. The model 
+configuration corresponds to the following `models/` folder structure:
 
 ```
 models/
-└── septilang
-    ├── modular_model.pt
-    ├── dict.de.txt
-    ├── dict.en.txt
-    ├── dict.et.txt
-    ├── dict.fi.txt
-    ├── dict.lt.txt
-    ├── dict.lv.txt
-    ├── dict.ru.txt
-    ├── sp-model.de.model
-    ├── sp-model.en.model
-    ├── sp-model.et.model
-    ├── sp-model.fi.model
-    ├── sp-model.lt.model
-    ├── sp-model.lv.model
-    └── sp-model.ru.model
+└── ct2_model/
+    ├── config.json
+    ├── model.bin
+    ├── vocabulary.json
+    └── tokenizer/
+        ├── config.json
+        ├── special_tokens_map.json
+        ├── tokenizer_config.json
+        └── tokenizer.json
 ```
 
 ### Docker setup
@@ -62,12 +54,11 @@ The following environment variables should be configured when running the contai
   nodes. Alternatively, the `docker run` flag `--cpuset-cpus` can be used to control this. For more details, refer to
   the [performance and hardware requirements](#performance-and-hardware-requirements) section below.
 
-By default, the container entrypoint is `main.py` without additional arguments, but arguments should be defined with the
-`COMMAND` option. The only required flag is `--model-name` to select which model is loaded by the worker. The full list
-of supported flags can be seen by running `python main.py -h`:
+By default, the container entrypoint is `main.py` without additional arguments. The model configuration is loaded from
+the config file specified by `--model-config`. The full list of supported flags can be seen by running `python main.py -h`:
 
 ```commandline
-usage: main.py [-h] --model-name MODEL_NAME [--model-config MODEL_CONFIG] [--log-config LOG_CONFIG] [--input-file INPUT_FILE] [--output-file OUTPUT_FILE] [--input-lang INPUT_LANG] [--output-lang OUTPUT_LANG]
+usage: main.py [-h] [--model-config MODEL_CONFIG] [--log-config LOG_CONFIG] [--input-file INPUT_FILE] [--output-file OUTPUT_FILE] [--input-lang INPUT_LANG] [--output-lang OUTPUT_LANG]
 
 A neural machine translation engine. This application supports two modes of operation: 
     a) a worker that processes incoming translation requests via RabbitMQ;
@@ -75,8 +66,6 @@ A neural machine translation engine. This application supports two modes of oper
 
 optional arguments:
   -h, --help            show this help message and exit
-  --model-name MODEL_NAME
-                        The model to load. Refers to the model name in the config file. (default: None)
   --model-config MODEL_CONFIG
                         The model config YAML file to load. (default: config/config.yaml)
   --log-config LOG_CONFIG
@@ -124,7 +113,6 @@ services:
       - MKL_NUM_THREADS=8
     volumes:
       - ./models:/app/models
-    command: ["--model-name", "septilang"]
     depends_on:
       - rabbitmq
 ```
@@ -154,24 +142,23 @@ The following steps have been tested on Ubuntu. The code is both CPU and GPU com
           python -c "import nltk; nltk.download(\"punkt\")"
           ```
 
-- Download the models from
-  the [HuggingFace](https://huggingface.co/models?other=modularNMT&pipeline_tag=translation&sort=downloads) and place
-  inside the `models/` directory
+- Download the Smugri4 model from
+  [HuggingFace](https://huggingface.co/tartuNLP/smugri4-mt), convert it to CTranslate2 format and place it in the `models/ct2_model/` directory
 - Check the configuration files and change any defaults as needed. Make sure that the paths in
   `config/config.yaml` points to the model files you just downloaded.
 - Specify RabbitMQ connection parameters with environment variables or in a `config/.env` file as illustrated in the
   `config/sample.env`.
 
-Run the worker with the following command where `$MODEL_NAME` matches the worker name in your config file:
+Run the worker with the following command:
 
 ```commandline
-python main.py --model-name $MODEL_NAME [--log-config config/logging.ini --model-config config/config.yaml]
+python main.py [--log-config config/logging.ini --model-config config/config.yaml]
 ```
 
 Or run local file translation with the following command:
 
 ```commandline
-python main.py --model-name $MODEL_NAME --input-file input.txt --output-file output.txt --input-lang est --output-lang eng [--log-config config/logging.ini --model-config config/config.yaml]
+python main.py --input-file input.txt --output-file output.txt --input-lang est --output-lang eng [--log-config config/logging.ini --model-config config/config.yaml]
 ```
 
 ### Performance and Hardware Requirements
