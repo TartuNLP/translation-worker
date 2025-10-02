@@ -1,9 +1,9 @@
-import fairseq.tasks
 import yaml
 from yaml.loader import SafeLoader
 from typing import List, Dict, Optional
 
-from pydantic import BaseSettings, BaseModel
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 
 
 class MQConfig(BaseSettings):
@@ -30,19 +30,18 @@ class Domain(BaseModel):
 
 class ModelConfig(BaseModel):
     model_name: str
-    checkpoint_path: str
-    checkpoint_file: str
+    model_path: str
+    tokenizer_path: str
     domains: List[Domain]
     language_codes: Dict[str, str]
-    dict_dir: Optional[str] = None
-    dict_path: Optional[str] = None
-    sentencepiece_dir: Optional[str] = None
-    sentencepiece_prefix: Optional[str] = None
-    sentencepiece_path: Optional[str] = None
+    
+    class Config:
+        # Allow fields that start with 'model_'
+        protected_namespaces = ()
 
 
-def read_model_config(file_path: str, model_name: str) -> ModelConfig:
+def read_model_config(file_path: str) -> ModelConfig:
     with open(file_path, 'r', encoding='utf-8') as f:
-        model_config = ModelConfig(model_name=model_name, **yaml.load(f, Loader=SafeLoader)['models'][model_name])
+        model_config = ModelConfig(**yaml.load(f, Loader=SafeLoader)['model'])
 
     return model_config
