@@ -10,9 +10,6 @@ def parse_args():
         formatter_class=ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument('--model-name', type=str, required=True,
-                        help="The model to load. Refers to the model name in the config file.")
-
     parser.add_argument('--model-config', type=FileType('r'), default='config/config.yaml',
                         help="The model config YAML file to load.")
     parser.add_argument('--log-config', type=FileType('r'), default='config/logging.prod.ini',
@@ -42,7 +39,7 @@ def main():
     args = parse_args()
 
     logging.config.fileConfig(args.log_config.name)
-    model_config = read_model_config(args.model_config.name, args.model_name)
+    model_config = read_model_config(args.model_config.name)
 
     translator = Translator(model_config)
 
