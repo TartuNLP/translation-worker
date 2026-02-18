@@ -11,7 +11,6 @@ from .schemas import Response, Request
 from .tag_utils import preprocess_tags, postprocess_tags
 from .normalization import normalize
 from .tokenization import sentence_tokenize
-from .promptops import prep_prompt, PF_SMUGRI_MT
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +31,7 @@ class Translator:
         self.tokenizer = AutoTokenizer.from_pretrained(str(self.model_config.tokenizer_path))
         
         self.device = "cuda" if ctranslate2.get_cuda_device_count() > 0 else "cpu"
-        compute_type = "float16"
+        compute_type = "bfloat16" if self.device == "cuda" else "int8_float32"
         
         logger.info(f"Initializing generator on {self.device}")
         self.model = ctranslate2.Generator(
@@ -52,13 +51,13 @@ class Translator:
         """Translate a batch of sentences."""
         batch_prompts = []
         for text in sentences:
-            input_data = {
-                "src_segm": text.strip(),
-                "src_lang": src_lang,
-                "task": "translate",
-                "tgt_lang": tgt_lang
-            }
-            prompt = prep_prompt(input_data, PF_SMUGRI_MT, inference=True)
+            # Use chat-based prompt format
+            prompt = f"<start_of_turn>user\n" + \
+                     f"Translate the following {src_lang} source text to {tgt_lang}:\n" + \
+                     f"{src_lang}: {text.strip()}\n" + \
+                     f"{tgt_lang}:<end_of_turn>\n" + \
+                     f"<start_of_turn>model\n"
+
             batch_prompts.append(prompt)
 
         batch_tokens = [self.prepare_tokens(prompt) for prompt in batch_prompts]
