@@ -1,4 +1,4 @@
-model: # https://huggingface.co/tartuNLP/smugri4-mt
+model: # https://huggingface.co/tartuNLP/Tahetorn_9B
   model_name: tahetorn
   model_path: models/tahetorn
   tokenizer_path: models/tahetorn/tokenizer 
