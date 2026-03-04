@@ -34,6 +34,11 @@ class ModelConfig(BaseModel):
     tokenizer_path: str
     domains: List[Domain]
     language_codes: Dict[str, str]
+    # Prompt format: 'tahetorn', 'smugri_mt'
+    prompt_format: str = 'tahetorn'
+    # Chunking configuration for context window 
+    max_input_tokens: int = 3000 
+    prompt_overhead: int = 100
     
     class Config:
         # Allow fields that start with 'model_'

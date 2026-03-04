@@ -1,7 +1,16 @@
 model: # https://huggingface.co/tartuNLP/Tahetorn_9B
+  # model_name: smugri4
+  # model_path: models/smugri4
+  # tokenizer_path: models/smugri4/tokenizer
   model_name: tahetorn
   model_path: models/tahetorn
-  tokenizer_path: models/tahetorn/tokenizer 
+  tokenizer_path: models/tahetorn/tokenizer
+
+  # Prompt format: 'tahetorn', 'smugri_mt'
+  prompt_format: tahetorn
+  # Context window
+  max_input_tokens: 1500 
+  prompt_overhead: 100
   domains:
     - name: general
       language_pairs: # A list of supported language pairs that the worker will handle
