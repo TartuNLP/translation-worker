@@ -34,6 +34,7 @@ class ModelConfig(BaseModel):
     tokenizer_path: str
     domains: List[Domain]
     language_codes: Dict[str, str]
+    beam_size: int = 1
     
     class Config:
         # Allow fields that start with 'model_'

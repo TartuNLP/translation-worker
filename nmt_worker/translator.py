@@ -69,7 +69,8 @@ class Translator:
             max_length=max_length,
             sampling_topk=1,
             sampling_temperature=1.0,
-            include_prompt_in_result=False
+            include_prompt_in_result=False,
+            beam_size=self.model_config.beam_size,
         )
         
         translations = []
