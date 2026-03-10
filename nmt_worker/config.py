@@ -35,6 +35,7 @@ class ModelConfig(BaseModel):
     domains: List[Domain]
     language_codes: Dict[str, str]
     beam_size: int = 1
+    compute_type: str = "float16"
     
     class Config:
         # Allow fields that start with 'model_'

@@ -3,6 +3,7 @@ model: # https://huggingface.co/tartuNLP/smugri4-mt
   model_path: models/ct2_model 
   tokenizer_path: models/ct2_model/tokenizer 
   beam_size: 4
+  compute_type: float16
   domains:
     - name: general
       language_pairs: # A list of supported language pairs that the worker will handle

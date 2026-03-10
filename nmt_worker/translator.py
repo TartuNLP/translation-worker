@@ -32,7 +32,7 @@ class Translator:
         self.tokenizer = AutoTokenizer.from_pretrained(str(self.model_config.tokenizer_path))
         
         self.device = "cuda" if ctranslate2.get_cuda_device_count() > 0 else "cpu"
-        compute_type = "float16"
+        compute_type = self.model_config.compute_type
         
         logger.info(f"Initializing generator on {self.device}")
         self.model = ctranslate2.Generator(
