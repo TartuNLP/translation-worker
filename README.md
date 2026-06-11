@@ -20,15 +20,39 @@ configuration corresponds to the following `models/` folder structure:
 ```
 models/
 └── ct2_model/
+  ├── config.json
+  ├── model.bin
+  ├── vocabulary.json
+  └── tokenizer/
     ├── config.json
-    ├── model.bin
-    ├── vocabulary.json
-    └── tokenizer/
-        ├── config.json
-        ├── special_tokens_map.json
-        ├── tokenizer_config.json
-        └── tokenizer.json
+    ├── special_tokens_map.json
+    ├── tokenizer_config.json
+    └── tokenizer.json
 ```
+
+#### Converting a HuggingFace Model to CTranslate2 Format
+
+[CTranslate2](https://opennmt.net/CTranslate2/index.html) requires models to be in its binary format. Use the `ct2-transformers-converter` tool to convert any HuggingFace transformer model:
+
+```commandline
+pip install ctranslate2
+ct2-transformers-converter --model tartuNLP/smugri4-mt --output_dir models/ct2_model
+```
+**Optional Quantization:** To reduce model size and improve inference speed, you can add quantization during conversion:
+```commandline
+ct2-transformers-converter --model tartuNLP/smugri4-mt --output_dir models/ct2_model --quantization int8
+```
+The converter will:
+- Download the model from HuggingFace Hub
+- Optimize it for inference
+- Generate the required CTranslate2 model files (`model.bin`, `config.json`, `vocabulary.json`)
+
+**Tokenizer Setup:** The converter does not copy the tokenizer files. You need to manually copy them from HuggingFace:
+```commandline
+mkdir -p models/ct2_model/tokenizer
+# Copy tokenizer files from the HuggingFace model repository
+```
+The tokenizer files should include: `tokenizer.json`, `tokenizer_config.json`, `special_tokens_map.json`, and `config.json`.
 
 ### Docker setup
 
@@ -142,10 +166,10 @@ The following steps have been tested on Ubuntu. The code is both CPU and GPU com
           python -c "import nltk; nltk.download(\"punkt\")"
           ```
 
-- Download the Smugri4 model from
-  [HuggingFace](https://huggingface.co/tartuNLP/smugri4-mt), convert it to CTranslate2 format and place it in the `models/ct2_model/` directory
+- Follow the [model conversion instructions](#converting-a-huggingface-model-to-ctranslate2-format) above to prepare the model files.
+
 - Check the configuration files and change any defaults as needed. Make sure that the paths in
-  `config/config.yaml` points to the model files you just downloaded.
+  `config/config.yaml` points to the model files you just converted.
 - Specify RabbitMQ connection parameters with environment variables or in a `config/.env` file as illustrated in the
   `config/sample.env`.
 
