@@ -1,8 +1,8 @@
 # TartuNLP translation worker
 
-This repository contains code for running TartuNLP's modular multilingual machine translation models. This application
-is based on [CTranslate2](https://github.com/OpenNMT/CTranslate2) for efficient inference. The models can be run locally to 
-translate plain text files or as worker that process requests from RabbitMQ. The workers are compatible with
+This repository contains code for running TartuNLP's LLM-based multilingual machine translation models. This branch
+runs Apertus 1.5 based models with [vLLM](https://github.com/vllm-project/vllm) and requires an NVIDIA GPU. The models
+can be run locally to translate plain text files or as worker that process requests from RabbitMQ. The workers are compatible with
 our [translation API](https://github.com/TartuNLP/translation-api).
 
 The project is developed by the [NLP research group](https://tartunlp.ai) at the [University of Tartu](https://ut.ee).
@@ -10,24 +10,44 @@ Neural machine translation can also be tested in our [web demo](https://translat
 
 ### Configuration and model files
 
-The current Smugri4 model can be downloaded from [HuggingFace](https://huggingface.co/tartuNLP/smugri4-mt).
-Older models and compatible code versions can be found from the
-[releases](https://github.com/TartuNLP/translation-worker/releases) section.
+The worker runs Apertus models in the Hugging Face format. Apertus 1.5 (`swiss-ai/Apertus-v1.5-8B` and models
+fine-tuned from it) is a multimodal model that is not yet supported by released vLLM and transformers versions. Its
+text-only part is however exactly an Apertus 1 model, so it is exported as a plain `ApertusForCausalLM` checkpoint
+first (requires `torch` and `safetensors`):
 
-The default config for running the Smugri4 model is specified in the included `config/config.yaml`. The model 
-configuration corresponds to the following `models/` folder structure:
+```commandline
+hf download swiss-ai/Apertus-v1.5-8B --local-dir apertus-1.5-src
+python scripts/export_apertus15_text.py apertus-1.5-src models/apertus
+```
+
+The export drops the image and audio tokenizers, their embedding rows and their tokens from the tokenizer, and gives
+identical results to the original model on text input.
+
+The bf16 model needs ~16 GB of GPU memory for the weights. For smaller GPUs (e.g. 10-12 GB), the model can be
+quantized to 4-bit weights with [AutoRound](https://github.com/intel/auto-round) (~6 GB, ~15-20 minutes on an
+RTX 3080). The calibration file should contain a few hundred translation examples covering all translation
+directions, ideally sampled from the model's training data (see the script for the format):
+
+```commandline
+pip install auto-round==0.16.1
+python scripts/quantize_autoround.py models/apertus models/apertus-w4a16 --calibration calibration.jsonl
+```
+
+The default config for running the model is specified in the included `config/config.yaml`. The `prompt_template`
+and the language names in `language_codes` must match the ones used in training. `model_path` points to the model
+directory:
 
 ```
 models/
-└── ct2_model/
+└── apertus/
     ├── config.json
-    ├── model.bin
-    ├── vocabulary.json
-    └── tokenizer/
-        ├── config.json
-        ├── special_tokens_map.json
-        ├── tokenizer_config.json
-        └── tokenizer.json
+    ├── generation_config.json
+    ├── model-0000X-of-0000Y.safetensors
+    ├── model.safetensors.index.json
+    ├── chat_template.jinja
+    ├── special_tokens_map.json
+    ├── tokenizer_config.json
+    └── tokenizer.json
 ```
 
 ### Docker setup
@@ -49,13 +69,10 @@ The following environment variables should be configured when running the contai
 - `MQ_EXCHANGE` (optional) - RabbitMQ exchange name (`translation` by default)
 - `MQ_HEARTBEAT` (optional) - heartbeat interval (`60` seconds by default)
 - `MQ_CONNECTION_NAME` (optional) - friendly connection name (`Translation worker` by default)
-- `MKL_NUM_THREADS` (optional) - number of threads used for intra-op parallelism by PyTorch. `16` by default. If set to
-  a blank value, it defaults to the number of CPU cores which may cause computational overhead when deployed on larger
-  nodes. Alternatively, the `docker run` flag `--cpuset-cpus` can be used to control this. For more details, refer to
-  the [performance and hardware requirements](#performance-and-hardware-requirements) section below.
 
 By default, the container entrypoint is `main.py` without additional arguments. The model configuration is loaded from
-the config file specified by `--model-config`. The full list of supported flags can be seen by running `python main.py -h`:
+the config file specified by `--model-config`. The container needs access to a GPU (`docker run --gpus all`) and
+enough shared memory for vLLM (`--ipc=host` or `--shm-size`). The full list of supported flags can be seen by running `python main.py -h`:
 
 ```commandline
 usage: main.py [-h] [--model-config MODEL_CONFIG] [--log-config LOG_CONFIG] [--input-file INPUT_FILE] [--output-file OUTPUT_FILE] [--input-lang INPUT_LANG] [--output-lang OUTPUT_LANG]
@@ -110,42 +127,33 @@ services:
       - MQ_PORT=5672
       - MQ_USERNAME=${RABBITMQ_USER}
       - MQ_PASSWORD=${RABBITMQ_PASS}
-      - MKL_NUM_THREADS=8
     volumes:
       - ./models:/app/models
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
     depends_on:
       - rabbitmq
 ```
 
 ### Manual setup
 
-The following steps have been tested on Ubuntu. The code is both CPU and GPU compatible (CUDA is required).
+The following steps have been tested on Linux with Python 3.12 and an NVIDIA GPU.
 
 - Clone this repository
-- Install prerequisites:
-    - GNU Compiler Collection (`sudo apt install build-essential`)
-    - For a **CPU** installation we recommend using the included `requirements.txt` file in a clean environment (tested
-      with Python 3.10)
-      ```commandline
-      pip install -r requirements.txt
-      ```
-
-    - For a **GPU** installation, use the `environment.yml` file instead.
-        - Make sure you have the following prerequisites installed:
-            - CUDA (see https://developer.nvidia.com/cuda-downloads)
-            - Conda (see https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
-
-        - Then create and activate a Conda environment with all dependencies:
-          ```commandline
-          conda env create -f environment.yml -n nmt
-          conda activate nmt
-          python -c "import nltk; nltk.download(\"punkt\")"
-          ```
-
-- Download the Smugri4 model from
-  [HuggingFace](https://huggingface.co/tartuNLP/smugri4-mt), convert it to CTranslate2 format and place it in the `models/ct2_model/` directory
+- Install the dependencies in a clean environment:
+  ```commandline
+  pip install -r requirements.txt
+  python -c "import nltk; nltk.download('punkt_tab')"
+  ```
+- Prepare the model as described in [configuration and model files](#configuration-and-model-files).
 - Check the configuration files and change any defaults as needed. Make sure that the paths in
-  `config/config.yaml` points to the model files you just downloaded.
+  `config/config.yaml` points to the model files you just prepared.
 - Specify RabbitMQ connection parameters with environment variables or in a `config/.env` file as illustrated in the
   `config/sample.env`.
 
@@ -163,22 +171,9 @@ python main.py --input-file input.txt --output-file output.txt --input-lang est 
 
 ### Performance and Hardware Requirements
 
-When running the model on a GPU, the exact RAM usage depends on the model and should always be tested, but a
-conservative estimate is to have **8 GB of memory** available.
+The worker requires an NVIDIA GPU. vLLM allocates `gpu_memory_utilization` (in `config/config.yaml`) of the GPU memory
+at startup, for the model weights and the KV cache. The bf16 8B model needs a GPU with at least 24 GB of memory, the
+4-bit quantized model runs on 10 GB GPUs (tested on an RTX 3080 with `max_model_len: 4096`).
 
-The CPU performance depends on the available CPU resources, however, this should be fine-tuned for the deployment
-infrastructure. By default, PyTorch will try to utilize all CPU cores to 100% and run as many threads as there are
-cores. This can cause major computational overhead if the worker is deployed on large nodes. The **number of threads
-used should be limited** using the `MKL_NUM_THREADS` environment variable or the `docker run` flag `--cpuset-cpus`.
-
-Limiting CPU usage by docker configuration which only limits CPU shares is not sufficient (e.g. `docker run` flag
-`--cpus` or the CPU limit in K8s, unless the non-default
-[static CPU Manager policy](https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/) is used). For
-example, on a node with 128 cores, setting the CPU limit at `16.0` results in 128 parallel threads running with each one
-utilizing only 1/8 of each core's computational potential. This amplifies the effect of multithreading overhead and can
-result in inference speeds up to 20x slower than expected.
-
-Although the optimal number of threads depends on the exact model and infrastructure used, a good starting point is
-around `16` (the default in the included docker image). With optimal configuration and modern hardware, the worker
-should be able to process ~7 sentences per second. For more information, please refer to
-[PyTorch documentation](https://pytorch.org/docs/stable/notes/cpu_threading_torchscript_inference.html).
+All sentences of a request are translated in one batch. `max_num_seqs` limits the number of sentences that are
+processed in parallel, and `max_model_len` the length of a prompt and its translation.

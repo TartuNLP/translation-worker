@@ -1,16 +1,31 @@
-model: # https://huggingface.co/tartuNLP/Tahetorn_9B
-  # model_name: smugri4
-  # model_path: models/smugri4
-  # tokenizer_path: models/smugri4/tokenizer
-  model_name: tahetorn
-  model_path: models/tahetorn
-  tokenizer_path: models/tahetorn/tokenizer
+model:
+  # Apertus 1.5 8B, exported as a text-only ApertusForCausalLM (scripts/export_apertus15_text.py), optionally
+  # quantized (scripts/quantize_autoround.py). The tokenizer is loaded from model_path unless tokenizer_path is set.
+  model_name: apertus
+  model_path: models/apertus
 
-  # Prompt format: 'tahetorn', 'smugri_mt'
-  prompt_format: tahetorn
-  # Context window
-  max_input_tokens: 1500 
+  # Prompt with {src_lang}, {tgt_lang} and {text} placeholders, filled with the language names from language_codes.
+  # It should match the prompt used in training. It is tokenized with the tokenizer's special tokens, which adds
+  # the BOS token <s>, as the Apertus chat template does. The SuurTõlk system prompt is from the `apertuss` format
+  # of https://github.com/TartuNLP/kuidastaltsutadalaamat (promptops.py); the user turn without the
+  # "{src_lang}: ... {tgt_lang}: " labels worked better with checkpoint-8022 (the labels were often echoed in the output).
+  prompt_template: "<|system_start|>You are SuurTõlk, the best Estonian-centric language model tailored for a number of conditional text generation tasks.<|system_end|><|developer_start|>Deliberation: disabled\nTool Capabilities: disabled<|developer_end|><|user_start|>Translate the following {src_lang} text to {tgt_lang}:\n{text}<|user_end|><|assistant_start|>"
+
+  # 'sentence': translate each sentence separately (in one batch);
+  # 'chunk': translate up to max_input_tokens of consecutive sentences at once, one sentence per line
+  translation_unit: sentence
+  max_input_tokens: 1500
   prompt_overhead: 100
+  # 1 = greedy decoding; > 1 = beam search, which is very slow in vLLM (all beams run to the token limit, >250x
+  # slower than greedy on FLORES) and favors short outputs
+  beam_size: 1
+  # Upper limit of generated tokens per segment, the effective limit is 3x the input length + 32
+  max_new_tokens: 1024
+
+  # vLLM engine
+  max_model_len: 4096
+  gpu_memory_utilization: 0.85
+  max_num_seqs: 64
   domains:
     - name: general
       language_pairs: # A list of supported language pairs that the worker will handle

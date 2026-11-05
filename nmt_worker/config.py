@@ -1,6 +1,6 @@
 import yaml
 from yaml.loader import SafeLoader
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Literal
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
@@ -31,15 +31,22 @@ class Domain(BaseModel):
 class ModelConfig(BaseModel):
     model_name: str
     model_path: str
-    tokenizer_path: str
+    tokenizer_path: Optional[str] = None  # defaults to model_path
     domains: List[Domain]
     language_codes: Dict[str, str]
-    # Prompt format: 'tahetorn', 'smugri_mt'
-    prompt_format: str = 'tahetorn'
-    # Chunking configuration for context window 
-    max_input_tokens: int = 3000 
+    # Prompt with {src_lang}, {tgt_lang} and {text} placeholders
+    prompt_template: str
+    # 'sentence' or 'chunk' (consecutive sentences up to max_input_tokens, one sentence per line)
+    translation_unit: Literal['sentence', 'chunk'] = 'sentence'
+    max_input_tokens: int = 1500
     prompt_overhead: int = 100
-    
+    beam_size: int = 1
+    max_new_tokens: int = 1024
+    # vLLM engine
+    max_model_len: int = 4096
+    gpu_memory_utilization: float = 0.85
+    max_num_seqs: int = 64
+
     class Config:
         # Allow fields that start with 'model_'
         protected_namespaces = ()

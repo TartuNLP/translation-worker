@@ -1,30 +1,19 @@
-FROM python:3.10
-
-# Install system dependencies
-RUN apt-get update && \
-    apt-get install -y \
-        gcc \
-        g++ \
-        libffi-dev \
-        musl-dev \
-        git
+FROM vllm/vllm-openai:v0.33.0
 
 ENV PYTHONIOENCODING=utf-8
-ENV MKL_NUM_THREADS=16
+ENV NLTK_DATA=/usr/local/share/nltk_data
 
 WORKDIR /app
 
-RUN adduser --disabled-password --gecos "app" app && \
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt && \
+    rm requirements.txt && \
+    python3 -c "import nltk; nltk.download('punkt_tab', download_dir='$NLTK_DATA')"
+
+RUN useradd --create-home app && \
     chown -R app:app /app
 USER app
 
-ENV PATH="/home/app/.local/bin:${PATH}"
-
-COPY --chown=app:app requirements.txt .
-RUN pip install --user -r requirements.txt && \
-    rm requirements.txt && \
-    python -c "import nltk; nltk.download(\"punkt\")"
-
 COPY --chown=app:app . .
 
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python3", "main.py"]
