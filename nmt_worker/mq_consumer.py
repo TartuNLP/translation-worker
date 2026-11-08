@@ -1,18 +1,17 @@
+import hashlib
 import json
 import logging
-import hashlib
 from sys import getsizeof
-from time import time, sleep
-
-from pydantic import ValidationError
+from time import sleep, time
 
 import pika
 import pika.exceptions
-from pika import credentials, BlockingConnection, ConnectionParameters
+from pika import BlockingConnection, ConnectionParameters, credentials
+from pydantic import ValidationError
 
-from nmt_worker.schemas import Response, Request
-from nmt_worker.translator import Translator
 from nmt_worker.config import MQConfig
+from nmt_worker.schemas import Request, Response
+from nmt_worker.translator import Translator
 
 logger = logging.getLogger(__name__)
 
@@ -124,9 +123,9 @@ class MQConsumer:
             request = Request(**request)
             response = self.translator.process_request(request)
         except ValidationError as error:
-            response = Response(status=f'Error parsing input: {str(error)}', status_code=400)
-        except Exception as e:
-            logger.exception(f'Unexpected error: {e}')
+            response = Response(status=f'Error parsing input: {error!s}', status_code=400)
+        except Exception:
+            logger.exception('Unexpected error')
             response = Response(status_code=500, status="Unknown internal error.")
 
         response = response.encode()

@@ -1,8 +1,7 @@
-from typing import List
 from nltk import sent_tokenize
 
 
-def sentence_tokenize(text: str) -> tuple[List, List]:
+def sentence_tokenize(text: str) -> tuple[list, list]:
     """
     Split text for sentence-by-sentence translation model.
     """

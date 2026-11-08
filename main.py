@@ -1,5 +1,5 @@
 import logging.config
-from argparse import ArgumentParser, FileType, ArgumentDefaultsHelpFormatter
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser, FileType
 
 
 def parse_args():
@@ -26,9 +26,6 @@ def parse_args():
                            help="Input language code")
     file_args.add_argument('--output-lang', type=str,
                            help="Output language code.")
-
-    # TODO: add domain and input_type?
-    # TODO: add stdin / stdout?
 
     return parser.parse_args()
 
@@ -57,7 +54,7 @@ def main():
         response = translator.process_request(request)
         args.output_file.write(response.result)
     else:
-        from nmt_worker import MQConsumer, MQConfig
+        from nmt_worker import MQConfig, MQConsumer
         mq_config = MQConfig()
         consumer = MQConsumer(
             translator=translator,

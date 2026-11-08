@@ -1,9 +1,7 @@
 import yaml
-from yaml.loader import SafeLoader
-from typing import List, Dict, Optional
-
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
+from yaml.loader import SafeLoader
 
 
 class MQConfig(BaseSettings):
@@ -19,21 +17,20 @@ class MQConfig(BaseSettings):
     connection_name: str = 'Translation worker'
 
     class Config:
-        env_file = 'config/.env'
         env_prefix = 'mq_'
 
 
 class Domain(BaseModel):
     name: str
-    language_pairs: List[str]  # a list of hyphen-separated input/output language pairs
+    language_pairs: list[str]  # a list of hyphen-separated input/output language pairs
 
 
 class ModelConfig(BaseModel):
     model_name: str
     model_path: str
     tokenizer_path: str
-    domains: List[Domain]
-    language_codes: Dict[str, str]
+    domains: list[Domain]
+    language_codes: dict[str, str]
     beam_size: int = 1
     compute_type: str = "float16"
     

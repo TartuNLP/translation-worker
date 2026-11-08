@@ -1,6 +1,5 @@
 import json
 from enum import Enum
-from typing import Optional, Union, Any
 
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
@@ -22,14 +21,14 @@ class Request(BaseModel):
     """
     A class that can be used to store NMT requests
     """
-    text: Union[str, list]
+    text: str | list
     src: str
     tgt: str
-    domain: Optional[str] = None
-    application: Optional[str] = None
-    input_type: Optional[InputType] = None
+    domain: str | None = None
+    application: str | None = None
+    input_type: InputType | None = None
 
-    def __init__(self, **data: Any):
+    def __init__(self, **data):
         super(Request, self).__init__(**data)
         if self.application:
             self.input_type = InputType(self.application.lower())
@@ -40,7 +39,7 @@ class Response:
     """
     A dataclass that can be used to store responses and transfer them over the message queue if needed.
     """
-    result: Optional[Union[str, list]] = None
+    result: str | list | None = None
     status_code: int = 200
     status: str = 'OK'
 

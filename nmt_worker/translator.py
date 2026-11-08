@@ -1,17 +1,16 @@
 import itertools
 import logging
 import warnings
-from typing import List
 
 import ctranslate2
 from transformers import AutoTokenizer
 
 from .config import ModelConfig
-from .schemas import Response, Request
-from .tag_utils import preprocess_tags, postprocess_tags
 from .normalization import normalize
+from .promptops import PF_SMUGRI_MT, prep_prompt
+from .schemas import Request, Response
+from .tag_utils import postprocess_tags, preprocess_tags
 from .tokenization import sentence_tokenize
-from .promptops import prep_prompt, PF_SMUGRI_MT
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +41,13 @@ class Translator:
             inter_threads=4
         )
 
-    def prepare_tokens(self, prompt: str) -> List[str]:
+    def prepare_tokens(self, prompt: str) -> list[str]:
         """Convert a prompt to a list of string tokens as expected by CTranslate2."""
         token_ids = self.tokenizer.encode(prompt, add_special_tokens=True)
         tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
         return tokens
 
-    def translate_batch(self, sentences: List[str], src_lang: str, tgt_lang: str, max_length: int = 2048) -> List[str]:
+    def translate_batch(self, sentences: list[str], src_lang: str, tgt_lang: str, max_length: int = 2048) -> list[str]:
         """Translate a batch of sentences."""
         batch_prompts = []
         for text in sentences:

@@ -128,7 +128,7 @@ services:
     depends_on:
       - rabbitmq
   nmt_worker:
-    image: ghcr.io/tartunlp/translation-worker:latest
+    image: ghcr.io/tartunlp/translation-worker:smugri
     environment:
       - MQ_HOST=rabbitmq
       - MQ_PORT=5672
@@ -148,30 +148,19 @@ The following steps have been tested on Ubuntu. The code is both CPU and GPU com
 - Clone this repository
 - Install prerequisites:
     - GNU Compiler Collection (`sudo apt install build-essential`)
-    - For a **CPU** installation we recommend using the included `requirements.txt` file in a clean environment (tested
-      with Python 3.10)
+    - For a **GPU** installation, CUDA drivers (see https://developer.nvidia.com/cuda-downloads)
+    - Install the dependencies from the included `requirements.txt` file in a clean environment (tested with
+      Python 3.10) and download the NLTK sentence tokenizer data:
       ```commandline
       pip install -r requirements.txt
+      python -c "import nltk; nltk.download(\"punkt_tab\")"
       ```
-
-    - For a **GPU** installation, use the `environment.yml` file instead.
-        - Make sure you have the following prerequisites installed:
-            - CUDA (see https://developer.nvidia.com/cuda-downloads)
-            - Conda (see https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
-
-        - Then create and activate a Conda environment with all dependencies:
-          ```commandline
-          conda env create -f environment.yml -n nmt
-          conda activate nmt
-          python -c "import nltk; nltk.download(\"punkt\")"
-          ```
 
 - Follow the [model conversion instructions](#converting-a-huggingface-model-to-ctranslate2-format) above to prepare the model files.
 
 - Check the configuration files and change any defaults as needed. Make sure that the paths in
   `config/config.yaml` points to the model files you just converted.
-- Specify RabbitMQ connection parameters with environment variables or in a `config/.env` file as illustrated in the
-  `config/sample.env`.
+- Specify RabbitMQ connection parameters with `MQ_*` environment variables (for example `MQ_HOST` and `MQ_PORT`).
 
 Run the worker with the following command:
 

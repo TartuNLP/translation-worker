@@ -4,3 +4,5 @@ __pycache__/
 truecaser/
 config/config.*.yaml
 *.iml
+env/
+.vscode/

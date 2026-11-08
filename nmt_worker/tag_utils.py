@@ -2,9 +2,8 @@
 Fallback preprocessing method to meet the bare minimum of tagged translation constraints.
 All tags are removed and appended to the translation.
 """
-import re
 import html
-from typing import List, Tuple
+import re
 
 from nmt_worker.schemas import InputType
 
@@ -22,7 +21,7 @@ html_entities = {'<': '&lt;',
                  '&': '&amp;'}
 
 
-def preprocess_tags(sentences: List[str], input_type: InputType) -> (List[str], List[List[Tuple[str, int, str]]]):
+def preprocess_tags(sentences: list[str], input_type: InputType) -> tuple[list[str], list[list[tuple[str, int, str]]]]:
     if input_type in tag_patterns:
         pattern = tag_patterns[input_type]
         clean_sentences = []
@@ -60,7 +59,7 @@ def preprocess_tags(sentences: List[str], input_type: InputType) -> (List[str], 
     return clean_sentences, tags
 
 
-def postprocess_tags(translations: List[str], tags: List[List[Tuple[str, int, str]]], input_type: InputType):
+def postprocess_tags(translations: list[str], tags: list[list[tuple[str, int, str]]], input_type: InputType):
     translations = [sentence.replace("<unk>", "") for sentence in translations]
 
     if input_type in tag_patterns:
