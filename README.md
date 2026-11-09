@@ -136,23 +136,14 @@ The following steps have been tested on Ubuntu. The code is both CPU and GPU com
 - Clone this repository
 - Install prerequisites:
     - GNU Compiler Collection (`sudo apt install build-essential`)
-    - For a **CPU** installation we recommend using the included `requirements.txt` file in a clean environment (tested
-      with Python 3.10)
-      ```commandline
-      pip install -r requirements.txt
-      ```
-
-    - For a **GPU** installation, use the `environment.yml` file instead.
-        - Make sure you have the following prerequisites installed:
-            - CUDA (see https://developer.nvidia.com/cuda-downloads)
-            - Conda (see https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
-
-        - Then create and activate a Conda environment with all dependencies:
-          ```commandline
-          conda env create -f environment.yml -n nmt
-          conda activate nmt
-          python -c "import nltk; nltk.download(\"punkt\")"
-          ```
+    - For a **GPU** installation, also install CUDA (see https://developer.nvidia.com/cuda-downloads)
+- Install the dependencies from the included `requirements.txt` file in a clean environment (tested with Python 3.10).
+  `pip<24.1` is required, as newer versions reject the package metadata of a FairSeq dependency (`omegaconf`).
+  ```commandline
+  pip install "pip<24.1"
+  pip install -r requirements.txt
+  python -c "import nltk; nltk.download(\"punkt_tab\")"
+  ```
 
 - Download the models from
   the [HuggingFace](https://huggingface.co/models?other=modularNMT&pipeline_tag=translation&sort=downloads) and place

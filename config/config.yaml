@@ -10,7 +10,7 @@ models:
           # A list of supported language pairs that the worker will handle
           [
             "est-rus", "est-ger", "est-eng", "eng-est", "ger-est", "rus-est",  # comment this line out, if also using mtee_general or synest_fully_modular
-            "est-fin", "fin-est" # comment this line out, if also using synest_fully_modular
+            "est-fin", "fin-est", # comment this line out, if also using synest_fully_modular
             "est-lit", "est-lav", "est-est",
             "eng-lit", "eng-lav", "eng-fin", "eng-rus", "eng-ger", "eng-eng",
             "ger-lit", "ger-lav", "ger-fin", "ger-rus", "ger-ger", "ger-eng",
