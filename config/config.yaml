@@ -16,8 +16,8 @@ model:
   translation_unit: sentence
   max_input_tokens: 1500
   prompt_overhead: 100
-  # 1 = greedy decoding; > 1 = beam search, which is very slow in vLLM (all beams run to the token limit, >250x
-  # slower than greedy on FLORES) and favors short outputs
+  # 1 = greedy decoding; > 1 = beam search (without length normalization, so it favors short outputs); each segment
+  # stops once its best finished beam can no longer be beaten, not at the token limit as in vLLM's LLM.beam_search
   beam_size: 4
   # Upper limit of generated tokens per segment, the effective limit is 3x the input length + 32
   max_new_tokens: 1024
