@@ -4,8 +4,8 @@ from typing import List
 
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
+from vllm.entrypoints.generate.beam_search.utils import BeamSearchInstance, create_sort_beams_key_function
 from vllm.inputs import TokensPrompt
-from vllm.sampling_params import BeamSearchParams
 
 from .config import ModelConfig
 from .schemas import Response, Request
@@ -53,14 +53,56 @@ class Translator:
                 + self.tokenizer(text, add_special_tokens=False, split_special_tokens=True)["input_ids"]
                 + self.tokenizer(suffix, add_special_tokens=False)["input_ids"])
 
-    def _best_beam(self, output, prompt_length: int) -> List[int]:
+    @staticmethod
+    def _decided(instance: BeamSearchInstance) -> bool:
         """
-        vLLM also returns beams that were cut off by max_tokens, and with length normalization a long unfinished
-        beam can outscore the finished ones (sequences are sorted by score). Prefer the best finished beam.
+        Without length normalization a beam's score (its cumulative logprob) can only decrease as it grows, so once
+        the best finished beam outscores all live beams, no later beam can beat it.
         """
-        finished = [seq for seq in output.sequences
+        if not instance.beams:
+            return True
+        return bool(instance.completed) and (max(seq.cum_logprob for seq in instance.completed)
+                                             >= max(seq.cum_logprob for seq in instance.beams))
+
+    def _beam_search(self, prompts: List[List[int]], max_tokens: List[int]) -> List[List[int]]:
+        """
+        Beam search with vLLM's own search step, but each segment stops as soon as its result is decided, and at its
+        own token limit. vLLM's LLM.beam_search runs every beam of the batch to the one max_tokens (live beams never run
+        out, so it does not stop early), which made beam search >250x slower than greedy decoding. Without length
+        normalization the result is the same as running to the token limit.
+        """
+        beam_width = self.model_config.beam_size
+        # 2 * beam_width candidates per step, as in vLLM's LLM.beam_search
+        step_params = SamplingParams(logprobs=2 * beam_width, max_tokens=1, temperature=0.0,
+                                     detokenize=False, skip_clone=True)
+        # length_penalty=0: with length normalization, long unfinished beams outrank the finished translations
+        sort_key = create_sort_beams_key_function(0.0)
+        engine_inputs = self.model._preprocess_cmpl([TokensPrompt(prompt_token_ids=ids) for ids in prompts])
+        instances = [BeamSearchInstance(engine_input) for engine_input in engine_inputs]
+
+        active = list(range(len(instances)))
+        for step in itertools.count():
+            active = [i for i in active if step < max_tokens[i] and not self._decided(instances[i])]
+            if not active:
+                break
+            self.model._beam_search_step(
+                instances_batch=[instances[i] for i in active],
+                base_sampling_params=step_params,
+                eos_token_ids=self.stop_token_ids,
+                ignore_eos=False,
+                beam_width=beam_width,
+                sort_beams_key=sort_key,
+                structured_output_backend=None,
+                structured_output_key=None,
+                structured_output_bitmask=None,
+            )
+        return [self._best_beam(instance, len(ids)) for instance, ids in zip(instances, prompts)]
+
+    def _best_beam(self, instance: BeamSearchInstance, prompt_length: int) -> List[int]:
+        """The best finished beam, or the best beam cut off by the token limit if none finished."""
+        finished = [seq for seq in instance.completed
                     if len(seq.tokens) > prompt_length and seq.tokens[-1] in self.stop_token_ids]
-        return (finished or output.sequences)[0].tokens[prompt_length:]
+        return max(finished or instance.beams, key=lambda seq: seq.cum_logprob).tokens[prompt_length:]
 
     def translate(self, texts: List[str], src_lang: str, tgt_lang: str) -> List[str]:
         """Translate a list of segments, the prompts are tokenized the same way as in training."""
@@ -70,14 +112,7 @@ class Translator:
             max_tokens.append(self._max_tokens(self.tokenizer(text, add_special_tokens=False)["input_ids"]))
 
         if self.model_config.beam_size > 1:
-            outputs = self.model.beam_search(
-                [TokensPrompt(prompt_token_ids=ids) for ids in prompts],
-                # vLLM runs all beams up to max_tokens and then ranks the finished and the unfinished beams together;
-                # with length normalization, long degenerate unfinished beams outrank the finished translations
-                BeamSearchParams(beam_width=self.model_config.beam_size, max_tokens=max(max_tokens), length_penalty=0.0),
-            )
-            # beam search returns the prompt and the output together
-            generated = [self._best_beam(output, len(ids)) for output, ids in zip(outputs, prompts)]
+            generated = self._beam_search(prompts, max_tokens)
         else:
             outputs = self.model.generate(
                 [TokensPrompt(prompt_token_ids=ids) for ids in prompts],
