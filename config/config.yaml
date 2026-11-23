@@ -18,7 +18,7 @@ model:
   prompt_overhead: 100
   # 1 = greedy decoding; > 1 = beam search, which is very slow in vLLM (all beams run to the token limit, >250x
   # slower than greedy on FLORES) and favors short outputs
-  beam_size: 1
+  beam_size: 4
   # Upper limit of generated tokens per segment, the effective limit is 3x the input length + 32
   max_new_tokens: 1024
 
