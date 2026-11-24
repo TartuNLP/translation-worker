@@ -31,7 +31,7 @@ model:
   gpu_memory_utilization: 0.85
   max_num_seqs: 64
   domains:
-    - name: general
+    - name: suurt6lk
       language_pairs: # A list of supported language pairs that the worker will handle
           [
           est-est,est-eng,est-fin,est-ger,est-lit,est-lav,est-nor,est-hun,est-rus,est-ukr,est-kca,est-koi,est-kpv,est-krl,est-lud,est-mdf,est-mhr,est-mns,est-mrj,est-myv,est-olo,est-udm,est-vep,est-liv,est-vro,est-sma,est-sme,est-smn,est-sms,est-smj,est-sje,est-sju,est-vot,est-izh_alamaluuga,est-izh_soikkola,est-sjd_antonova,est-sjd_kuruch,
