@@ -33,8 +33,10 @@ pip install auto-round==0.16.1
 python scripts/quantize_autoround.py models/apertus models/apertus-w4a16 --calibration calibration.jsonl
 ```
 
-The default config for running the model is specified in the included `config/config.yaml`. The `prompt_template`
-and the language names in `language_codes` must match the ones used in training. `model_path` points to the model
+The default config for running the model is specified in the included `config/config.yaml`. The prompt templates
+and the language names in `language_codes` must match the ones used in training. Requests may contain reference
+translations (`references`, a list of `{"source": ..., "target": ...}` pairs, and `use_references`), which are added
+to the prompt of each segment with `reference_prompt_template` and `reference_example_template`. `model_path` points to the model
 directory:
 
 ```

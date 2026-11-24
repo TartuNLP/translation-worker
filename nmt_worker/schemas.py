@@ -1,6 +1,6 @@
 import json
 from enum import Enum
-from typing import Optional, Union, Any
+from typing import List, Optional, Union, Any
 
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
@@ -18,6 +18,14 @@ class InputType(Enum):
         return InputType.PLAIN
 
 
+class Reference(BaseModel):
+    """
+    A reference translation: a text in the input language and its translation in the target language.
+    """
+    source: str
+    target: str
+
+
 class Request(BaseModel):
     """
     A class that can be used to store NMT requests
@@ -28,6 +36,8 @@ class Request(BaseModel):
     domain: Optional[str] = None
     application: Optional[str] = None
     input_type: Optional[InputType] = None
+    references: Optional[List[Reference]] = None
+    use_references: Optional[bool] = None
 
     def __init__(self, **data: Any):
         super(Request, self).__init__(**data)

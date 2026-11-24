@@ -1,8 +1,10 @@
+from string import Formatter
+
 import yaml
 from yaml.loader import SafeLoader
-from typing import List, Dict, Optional, Literal
+from typing import List, Dict, Optional, Literal, Set
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -28,6 +30,10 @@ class Domain(BaseModel):
     language_pairs: List[str]  # a list of hyphen-separated input/output language pairs
 
 
+def _placeholders(template: str) -> Set[str]:
+    return {name for _, name, _, _ in Formatter().parse(template) if name is not None}
+
+
 class ModelConfig(BaseModel):
     model_name: str
     model_path: str
@@ -36,6 +42,12 @@ class ModelConfig(BaseModel):
     language_codes: Dict[str, str]
     # Prompt with {src_lang}, {tgt_lang} and {text} placeholders
     prompt_template: str
+    # Prompt for translating with reference translations, with {src_lang}, {tgt_lang}, {examples} and {text}
+    # placeholders. {examples} is filled with reference_example_template once per reference. Without these two
+    # templates, requests with references are translated with prompt_template.
+    reference_prompt_template: Optional[str] = None
+    # One reference example, with {number} (1, 2, ...), {src_lang}, {tgt_lang}, {source} and {target} placeholders
+    reference_example_template: Optional[str] = None
     # 'sentence' or 'chunk' (consecutive sentences up to max_input_tokens, one sentence per line)
     translation_unit: Literal['sentence', 'chunk'] = 'sentence'
     max_input_tokens: int = 1500
@@ -50,6 +62,26 @@ class ModelConfig(BaseModel):
     class Config:
         # Allow fields that start with 'model_'
         protected_namespaces = ()
+
+    @model_validator(mode='after')
+    def check_prompt_templates(self) -> 'ModelConfig':
+        """Fail at startup rather than on the first request if a template has missing or unknown placeholders."""
+        templates = [('prompt_template', self.prompt_template, {'src_lang', 'tgt_lang'}, {'text'})]
+        if (self.reference_prompt_template is None) != (self.reference_example_template is None):
+            raise ValueError("reference_prompt_template and reference_example_template must be set together")
+        if self.reference_prompt_template is not None:
+            templates += [
+                ('reference_prompt_template', self.reference_prompt_template, {'src_lang', 'tgt_lang'},
+                 {'examples', 'text'}),
+                ('reference_example_template', self.reference_example_template, {'number', 'src_lang', 'tgt_lang'},
+                 {'source', 'target'}),
+            ]
+        for name, template, optional, required in templates:
+            placeholders = _placeholders(template)
+            if not required <= placeholders or not placeholders <= optional | required:
+                raise ValueError(f"{name} must contain the placeholders {sorted(required)} and may contain "
+                                 f"{sorted(optional)}, found {sorted(placeholders)}")
+        return self
 
 
 def read_model_config(file_path: str) -> ModelConfig:
