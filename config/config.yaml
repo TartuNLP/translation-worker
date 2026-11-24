@@ -16,9 +16,13 @@ model:
   translation_unit: sentence
   max_input_tokens: 1500
   prompt_overhead: 100
-  # 1 = greedy decoding; > 1 = beam search (without length normalization, so it favors short outputs); each segment
-  # stops once its best finished beam can no longer be beaten, not at the token limit as in vLLM's LLM.beam_search
-  beam_size: 4
+  # 1 = greedy decoding; > 1 = beam search; each segment stops once its finished translations are unlikely to be
+  # beaten (as in Hugging Face transformers), not at the token limit as in vLLM's LLM.beam_search
+   beam_size: 4
+  # Finished translations are ranked by logprob / length ** length_penalty; 0 (no length normalization) favors
+  # short outputs and often drops the end of the sentence
+  length_penalty: 1.0
+
   # Upper limit of generated tokens per segment, the effective limit is 3x the input length + 32
   max_new_tokens: 1024
 
