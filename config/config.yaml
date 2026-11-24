@@ -21,7 +21,7 @@ model:
   beam_size: 4
   # Finished translations are ranked by logprob / length ** length_penalty; 0 (no length normalization) favors
   # short outputs and often drops the end of the sentence
-  length_penalty: 1.0
+  length_penalty: 0.6
 
   # Upper limit of generated tokens per segment, the effective limit is 3x the input length + 32
   max_new_tokens: 1024
