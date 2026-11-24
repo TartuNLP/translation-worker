@@ -18,7 +18,7 @@ model:
   prompt_overhead: 100
   # 1 = greedy decoding; > 1 = beam search; each segment stops once its finished translations are unlikely to be
   # beaten (as in Hugging Face transformers), not at the token limit as in vLLM's LLM.beam_search
-   beam_size: 4
+  beam_size: 4
   # Finished translations are ranked by logprob / length ** length_penalty; 0 (no length normalization) favors
   # short outputs and often drops the end of the sentence
   length_penalty: 1.0
