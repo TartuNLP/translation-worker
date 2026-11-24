@@ -35,7 +35,7 @@ class Translator:
         eos = self.model.llm_engine.input_processor.generation_config_fields.get("eos_token_id")
         self.stop_token_ids = {self.tokenizer.eos_token_id, *(eos if isinstance(eos, list) else [eos] if eos else [])}
         logger.info(f"Model loaded (translation_unit={model_config.translation_unit}, "
-                    f"beam_size={model_config.beam_size})")
+                    f"beam_size={model_config.beam_size}, length_penalty={model_config.length_penalty})")
 
     def _max_tokens(self, text_ids: List[int]) -> int:
         return min(self.model_config.max_new_tokens, 3 * len(text_ids) + 32)
@@ -53,36 +53,40 @@ class Translator:
                 + self.tokenizer(text, add_special_tokens=False, split_special_tokens=True)["input_ids"]
                 + self.tokenizer(suffix, add_special_tokens=False)["input_ids"])
 
-    @staticmethod
-    def _decided(instance: BeamSearchInstance) -> bool:
+    def _decided(self, instance: BeamSearchInstance, score) -> bool:
         """
-        Without length normalization a beam's score (its cumulative logprob) can only decrease as it grows, so once
-        the best finished beam outscores all live beams, no later beam can beat it.
+        Stop when there are beam_size finished translations and the worst of them scores at least as well as the
+        best live beam does now (Hugging Face transformers' early_stopping=False). Without length normalization this is
+        exact: a beam's score (its cumulative logprob) can only decrease as it grows.
         """
         if not instance.beams:
             return True
-        return bool(instance.completed) and (max(seq.cum_logprob for seq in instance.completed)
-                                             >= max(seq.cum_logprob for seq in instance.beams))
+        beam_width = self.model_config.beam_size
+        if len(instance.completed) < beam_width:
+            return False
+        worst_finished = sorted((score(seq) for seq in instance.completed), reverse=True)[beam_width - 1]
+        return worst_finished >= max(score(seq) for seq in instance.beams)
+
 
     def _beam_search(self, prompts: List[List[int]], max_tokens: List[int]) -> List[List[int]]:
         """
         Beam search with vLLM's own search step, but each segment stops as soon as its result is decided, and at its
         own token limit. vLLM's LLM.beam_search runs every beam of the batch to the one max_tokens (live beams never run
-        out, so it does not stop early), which made beam search >250x slower than greedy decoding. Without length
-        normalization the result is the same as running to the token limit.
+        out, so it does not stop early), which made beam search >250x slower than greedy decoding.
         """
         beam_width = self.model_config.beam_size
         # 2 * beam_width candidates per step, as in vLLM's LLM.beam_search
         step_params = SamplingParams(logprobs=2 * beam_width, max_tokens=1, temperature=0.0,
                                      detokenize=False, skip_clone=True)
-        # length_penalty=0: with length normalization, long unfinished beams outrank the finished translations
-        sort_key = create_sort_beams_key_function(0.0)
+        # logprob / length ** length_penalty, the length counting the generated tokens with EOS; the live beams of a
+        # segment all have the same length, so it only matters for comparing finished translations
+        sort_key = create_sort_beams_key_function(self.model_config.length_penalty)
         engine_inputs = self.model._preprocess_cmpl([TokensPrompt(prompt_token_ids=ids) for ids in prompts])
         instances = [BeamSearchInstance(engine_input) for engine_input in engine_inputs]
 
         active = list(range(len(instances)))
         for step in itertools.count():
-            active = [i for i in active if step < max_tokens[i] and not self._decided(instances[i])]
+            active = [i for i in active if step < max_tokens[i] and not self._decided(instances[i], sort_key)]
             if not active:
                 break
             self.model._beam_search_step(
@@ -96,13 +100,13 @@ class Translator:
                 structured_output_key=None,
                 structured_output_bitmask=None,
             )
-        return [self._best_beam(instance, len(ids)) for instance, ids in zip(instances, prompts)]
+        return [self._best_beam(instance, len(ids), sort_key) for instance, ids in zip(instances, prompts)]
 
-    def _best_beam(self, instance: BeamSearchInstance, prompt_length: int) -> List[int]:
+    def _best_beam(self, instance: BeamSearchInstance, prompt_length: int, score) -> List[int]:
         """The best finished beam, or the best beam cut off by the token limit if none finished."""
         finished = [seq for seq in instance.completed
                     if len(seq.tokens) > prompt_length and seq.tokens[-1] in self.stop_token_ids]
-        return max(finished or instance.beams, key=lambda seq: seq.cum_logprob).tokens[prompt_length:]
+        return max(finished or instance.beams, key=score).tokens[prompt_length:]
 
     def translate(self, texts: List[str], src_lang: str, tgt_lang: str) -> List[str]:
         """Translate a list of segments, the prompts are tokenized the same way as in training."""
