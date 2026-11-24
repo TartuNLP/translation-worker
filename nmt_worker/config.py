@@ -53,6 +53,16 @@ class ModelConfig(BaseModel):
     max_input_tokens: int = 1500
     prompt_overhead: int = 100
     beam_size: int = 1
+    length_penalty: float = 1.0
+    # Beam search only: 'score' returns the best finished translation by model score, 'mbr' the consensus of the
+    # beam_size best ones (highest chrF++ against the others)
+    selection: Literal['score', 'mbr'] = 'score'
+    # Beam search only: drop beams that end in a block of tokens repeated back-to-back (see Translator._find_loop)
+    loop_guard: bool = False
+    loop_max_period: int = 40  # longest repeated block checked, in tokens
+    loop_min_copies: int = 3   # a block of 2+ tokens is a loop at this many back-to-back copies...
+    loop_min_span: int = 16    # ...spanning at least this many tokens
+    loop_max_run: int = 8      # a single token is a loop at this many in a row
     max_new_tokens: int = 1024
     # vLLM engine
     max_model_len: int = 4096
