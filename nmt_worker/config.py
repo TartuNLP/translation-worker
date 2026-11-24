@@ -41,6 +41,7 @@ class ModelConfig(BaseModel):
     max_input_tokens: int = 1500
     prompt_overhead: int = 100
     beam_size: int = 1
+    length_penalty: float = 1.0
     max_new_tokens: int = 1024
     # vLLM engine
     max_model_len: int = 4096
